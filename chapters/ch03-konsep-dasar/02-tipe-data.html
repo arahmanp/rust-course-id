@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.2 Tipe Data — Belajar Rust</title>
+<meta name="description" content="Tipe data skalar (integer, float, boolean, char) dan tipe data majemuk (tuple, array) di Rust.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch03-02">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 3: Konsep Pemrograman Dasar</nav>
+    <article>
+      <p class="chapter-label">Bab 3.2</p>
+      <h1>Tipe Data</h1>
+
+      <p class="lead">
+        Setiap nilai di Rust punya <em>data type</em> tertentu, yang memberi
+        tahu Rust jenis data apa yang sedang ditentukan, supaya Rust tahu
+        cara memproses data itu. Kita akan lihat dua kelompok tipe data:
+        <strong>scalar</strong> dan <strong>compound</strong> (majemuk).
+      </p>
+      <p>
+        Ingat, Rust adalah bahasa <em>statically typed</em>, artinya Rust
+        harus tahu tipe semua variabel saat compile-time. Compiler biasanya
+        bisa menyimpulkan tipe yang kita mau berdasarkan nilai dan cara kita
+        memakainya. Dalam kasus di mana banyak tipe memungkinkan — seperti
+        saat kita mengonversi <code>String</code> menjadi tipe numerik
+        memakai <code>parse</code> di Bab 2 — kita harus menambahkan anotasi
+        tipe, seperti ini:
+      </p>
+      <pre><code class="language-rust">let guess: u32 = "42".parse().expect("Bukan angka!");</code></pre>
+      <p>
+        Kalau kita tidak menambahkan anotasi tipe <code>: u32</code> di atas,
+        Rust akan menampilkan error berikut, yang berarti compiler butuh
+        lebih banyak informasi dari kita untuk tahu tipe apa yang kita mau:
+      </p>
+      <pre><code class="language-text">$ cargo build
+   Compiling no_type_annotations v0.1.0 (file:///projects/no_type_annotations)
+error[E0284]: type annotations needed
+ --> src/main.rs:2:9
+  |
+2 |     let guess = "42".parse().expect("Bukan angka!");
+  |         ^^^^^        ----- type must be known at this point
+  |
+  = note: cannot satisfy `<_ as FromStr>::Err == _`
+help: consider giving `guess` an explicit type
+  |
+2 |     let guess: /* Type */ = "42".parse().expect("Bukan angka!");
+  |              ++++++++++++
+
+For more information about this error, try `rustc --explain E0284`.
+error: could not compile `no_type_annotations` (bin "no_type_annotations") due to 1 previous error</code></pre>
+      <p>Kamu akan melihat anotasi tipe yang berbeda untuk tipe data lain.</p>
+
+      <h2 id="scalar">Tipe Scalar</h2>
+      <p>
+        Tipe <strong>scalar</strong> merepresentasikan satu nilai tunggal.
+        Rust punya empat tipe scalar utama: integer, floating-point, Boolean,
+        dan karakter. Kamu mungkin mengenali tipe-tipe ini dari bahasa
+        pemrograman lain. Mari lihat cara kerjanya di Rust.
+      </p>
+
+      <h3 id="integer">Tipe Integer</h3>
+      <p>
+        <strong>Integer</strong> adalah angka tanpa komponen pecahan. Kita
+        sudah memakai satu tipe integer di Bab 2, yaitu tipe <code>u32</code>.
+        Deklarasi tipe ini menandakan bahwa nilai yang diasosiasikan
+        dengannya seharusnya berupa integer <em>unsigned</em> (tipe integer
+        signed diawali <code>i</code>, bukan <code>u</code>) yang memakai
+        ruang 32 bit. Tabel berikut menunjukkan tipe integer bawaan Rust.
+        Kamu bisa memakai varian apa pun ini untuk mendeklarasikan tipe
+        nilai integer.
+      </p>
+      <table>
+        <thead><tr><th>Panjang</th><th>Signed</th><th>Unsigned</th></tr></thead>
+        <tbody>
+          <tr><td>8-bit</td><td><code>i8</code></td><td><code>u8</code></td></tr>
+          <tr><td>16-bit</td><td><code>i16</code></td><td><code>u16</code></td></tr>
+          <tr><td>32-bit</td><td><code>i32</code></td><td><code>u32</code></td></tr>
+          <tr><td>64-bit</td><td><code>i64</code></td><td><code>u64</code></td></tr>
+          <tr><td>128-bit</td><td><code>i128</code></td><td><code>u128</code></td></tr>
+          <tr><td>tergantung arsitektur</td><td><code>isize</code></td><td><code>usize</code></td></tr>
+        </tbody>
+      </table>
+      <p>
+        Setiap varian bisa berupa signed atau unsigned dan punya ukuran
+        eksplisit. <strong>Signed</strong> dan <strong>unsigned</strong>
+        merujuk pada apakah angka itu bisa bernilai negatif — dengan kata
+        lain, apakah angkanya butuh tanda (signed) atau selalu positif
+        sehingga tidak butuh tanda sama sekali (unsigned). Ini seperti
+        menulis angka di kertas: kalau tandanya penting, angka ditulis
+        dengan tanda plus atau minus; tapi kalau aman diasumsikan positif,
+        angka ditulis tanpa tanda. Angka signed disimpan memakai representasi
+        <em>two's complement</em>.
+      </p>
+      <p>
+        Setiap varian signed bisa menyimpan angka dari −(2<sup>n − 1</sup>)
+        sampai 2<sup>n − 1</sup> − 1 inklusif, di mana <em>n</em> adalah
+        jumlah bit yang dipakai varian itu. Jadi, <code>i8</code> bisa
+        menyimpan angka dari −(2<sup>7</sup>) sampai 2<sup>7</sup> − 1, yaitu
+        −128 sampai 127. Varian unsigned bisa menyimpan angka dari 0 sampai
+        2<sup>n</sup> − 1, jadi <code>u8</code> bisa menyimpan angka dari 0
+        sampai 2<sup>8</sup> − 1, yaitu 0 sampai 255.
+      </p>
+      <p>
+        Selain itu, tipe <code>isize</code> dan <code>usize</code>
+        bergantung pada arsitektur komputer tempat programmu berjalan: 64
+        bit kalau di arsitektur 64-bit, dan 32 bit kalau di arsitektur
+        32-bit.
+      </p>
+      <p>
+        Kamu bisa menulis literal integer dalam berbagai bentuk berikut.
+        Perhatikan bahwa literal angka yang bisa jadi beberapa tipe numerik
+        mengizinkan akhiran tipe (type suffix), seperti <code>57u8</code>,
+        untuk menentukan tipenya. Literal angka juga bisa memakai
+        <code>_</code> sebagai pemisah visual supaya lebih mudah dibaca,
+        seperti <code>1_000</code>, yang nilainya sama seperti
+        <code>1000</code>.
+      </p>
+      <table>
+        <thead><tr><th>Literal angka</th><th>Contoh</th></tr></thead>
+        <tbody>
+          <tr><td>Desimal</td><td><code>98_222</code></td></tr>
+          <tr><td>Hex</td><td><code>0xff</code></td></tr>
+          <tr><td>Oktal</td><td><code>0o77</code></td></tr>
+          <tr><td>Biner</td><td><code>0b1111_0000</code></td></tr>
+          <tr><td>Byte (hanya <code>u8</code>)</td><td><code>b'A'</code></td></tr>
+        </tbody>
+      </table>
+      <p>
+        Jadi bagaimana kamu tahu tipe integer mana yang harus dipakai? Kalau
+        ragu, default Rust umumnya titik awal yang bagus: tipe integer
+        default-nya adalah <code>i32</code>. Situasi utama di mana kamu akan
+        memakai <code>isize</code> atau <code>usize</code> adalah saat
+        mengindeks sejenis koleksi data.
+      </p>
+
+      <div class="callout callout-warning">
+        <p class="callout-title">⚠️ Integer Overflow</p>
+        <p>
+          Misalkan kamu punya variabel bertipe <code>u8</code> yang bisa
+          menampung nilai antara 0 dan 255. Kalau kamu coba ubah variabel
+          itu ke nilai di luar rentang itu, misalnya 256, akan terjadi
+          <strong>integer overflow</strong>, yang bisa menghasilkan salah
+          satu dari dua perilaku:
+        </p>
+        <ul>
+          <li>
+            Saat compile dalam mode <em>debug</em>, Rust menyertakan
+            pengecekan integer overflow yang membuat programmu
+            <strong>panic</strong> (crash) saat runtime kalau ini terjadi.
+          </li>
+          <li>
+            Saat compile dalam mode <em>release</em> (memakai flag
+            <code>--release</code>), Rust <strong>tidak</strong>
+            menyertakan pengecekan itu. Sebaliknya, kalau overflow terjadi,
+            Rust melakukan <em>two's complement wrapping</em>: nilai yang
+            melebihi maksimum tipe itu akan "berputar balik" ke nilai
+            minimum yang bisa ditampung tipe itu. Untuk <code>u8</code>,
+            nilai 256 menjadi 0, nilai 257 menjadi 1, dan seterusnya. Program
+            tidak akan panic, tapi variabelnya akan bernilai sesuatu yang
+            mungkin bukan yang kamu harapkan. Mengandalkan perilaku wrapping
+            ini dianggap sebagai kesalahan.
+          </li>
+        </ul>
+        <p>
+          Untuk menangani kemungkinan overflow secara eksplisit, standard
+          library menyediakan beberapa keluarga method pada tipe numerik
+          primitif: <code>wrapping_*</code> (selalu wrap di semua mode),
+          <code>checked_*</code> (mengembalikan <code>None</code> kalau
+          overflow), <code>overflowing_*</code> (mengembalikan nilai
+          plus Boolean penanda overflow), dan <code>saturating_*</code>
+          (mentok di nilai minimum/maksimum tipe itu).
+        </p>
+      </div>
+
+      <h3 id="float">Tipe Floating-Point</h3>
+      <p>
+        Rust juga punya dua tipe primitif untuk
+        <strong>floating-point number</strong> (angka desimal): <code>f32</code>
+        dan <code>f64</code>, berukuran 32 bit dan 64 bit. Tipe default-nya
+        adalah <code>f64</code>, karena di CPU modern kecepatannya kurang
+        lebih sama dengan <code>f32</code> tapi dengan presisi lebih tinggi.
+        Semua tipe floating-point bersifat signed.
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let x = 2.0; // f64
+
+    let y: f32 = 3.0; // f32
+}</code></pre>
+      <p>Angka floating-point direpresentasikan sesuai standar IEEE-754.</p>
+
+      <h3 id="operasi">Operasi Numerik</h3>
+      <p>
+        Rust mendukung operasi matematika dasar yang kamu harapkan untuk
+        semua tipe angka: penjumlahan, pengurangan, perkalian, pembagian,
+        dan sisa bagi (remainder/modulo). Pembagian integer dipangkas
+        (truncate) ke arah nol menuju integer terdekat.
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    // penjumlahan
+    let sum = 5 + 10;
+
+    // pengurangan
+    let difference = 95.5 - 4.3;
+
+    // perkalian
+    let product = 4 * 30;
+
+    // pembagian
+    let quotient = 56.7 / 32.2;
+    let truncated = -5 / 3; // hasilnya -1
+
+    // sisa bagi (modulo)
+    let remainder = 43 % 5;
+}</code></pre>
+      <p>
+        Setiap ekspresi di pernyataan ini memakai operator matematika dan
+        dievaluasi menjadi satu nilai, yang lalu diikat ke sebuah variabel.
+        Lampiran B berisi daftar lengkap semua operator yang disediakan
+        Rust.
+      </p>
+
+      <h3 id="boolean">Tipe Boolean</h3>
+      <p>
+        Seperti kebanyakan bahasa pemrograman lain, tipe Boolean di Rust
+        punya dua kemungkinan nilai: <code>true</code> dan <code>false</code>.
+        Boolean berukuran satu byte. Tipe Boolean di Rust ditulis dengan
+        <code>bool</code>. Contoh:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let t = true;
+
+    let f: bool = false; // dengan anotasi tipe eksplisit
+}</code></pre>
+      <p>
+        Cara utama memakai nilai Boolean adalah lewat kondisional, seperti
+        ekspresi <code>if</code>. Kita akan bahas cara kerja <code>if</code>
+        di subbab 3.5 (Alur Kontrol).
+      </p>
+
+      <h3 id="char">Tipe Karakter</h3>
+      <p>
+        Tipe <code>char</code> di Rust adalah tipe alfabet paling primitif
+        di bahasa ini. Berikut contoh mendeklarasikan nilai <code>char</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let c = 'z';
+    let z: char = 'ℤ'; // dengan anotasi tipe eksplisit
+    let heart_eyed_cat = '😻';
+}</code></pre>
+      <p>
+        Perhatikan kita menuliskan literal <code>char</code> dengan tanda
+        kutip tunggal, berbeda dari literal string yang memakai tanda kutip
+        ganda. Tipe <code>char</code> di Rust berukuran 4 byte dan
+        merepresentasikan sebuah nilai skalar Unicode, artinya ia bisa
+        merepresentasikan jauh lebih banyak daripada sekadar ASCII. Huruf
+        beraksen; karakter Mandarin, Jepang, Korea; emoji; dan zero-width
+        space semuanya nilai <code>char</code> yang valid di Rust. Nilai
+        skalar Unicode berkisar dari <code>U+0000</code> sampai
+        <code>U+D7FF</code> dan <code>U+E000</code> sampai
+        <code>U+10FFFF</code> inklusif. Tapi, "karakter" sebenarnya bukan
+        konsep yang benar-benar ada di Unicode, jadi intuisi manusiawi kamu
+        tentang apa itu "karakter" mungkin tidak selalu cocok dengan apa
+        itu <code>char</code> di Rust. Topik ini akan dibahas detail di Bab
+        8 (Storing UTF-8 Encoded Text with Strings).
+      </p>
+
+      <h2 id="compound">Tipe Compound (Majemuk)</h2>
+      <p>
+        Tipe <strong>compound</strong> bisa mengelompokkan beberapa nilai
+        menjadi satu tipe. Rust punya dua tipe compound primitif: tuple dan
+        array.
+      </p>
+
+      <h3 id="tuple">Tipe Tuple</h3>
+      <p>
+        <strong>Tuple</strong> adalah cara umum untuk mengelompokkan
+        sejumlah nilai dengan berbagai tipe menjadi satu tipe compound.
+        Tuple punya panjang tetap: begitu dideklarasikan, ukurannya tidak
+        bisa bertambah atau berkurang.
+      </p>
+      <p>
+        Kita membuat tuple dengan menulis daftar nilai yang dipisah koma di
+        dalam tanda kurung. Setiap posisi di tuple punya tipe, dan tipe
+        nilai yang berbeda-beda di dalam tuple tidak harus sama. Kita
+        tambahkan anotasi tipe opsional di contoh ini:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let tup: (i32, f64, u8) = (500, 6.4, 1);
+}</code></pre>
+      <p>
+        Variabel <code>tup</code> terikat ke seluruh tuple, karena tuple
+        dianggap sebagai satu elemen compound tunggal. Untuk mengambil
+        nilai-nilai individualnya, kita bisa memakai pattern matching untuk
+        men-<em>destructure</em> nilai tuple, seperti ini:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let tup = (500, 6.4, 1);
+
+    let (x, y, z) = tup;
+
+    println!("Nilai y adalah: {y}");
+}</code></pre>
+      <p>
+        Program ini pertama membuat sebuah tuple dan mengikatnya ke variabel
+        <code>tup</code>. Lalu ia memakai sebuah pattern dengan <code>let</code>
+        untuk mengambil <code>tup</code> dan mengubahnya menjadi tiga
+        variabel terpisah, <code>x</code>, <code>y</code>, dan <code>z</code>.
+        Ini disebut <strong>destructuring</strong> karena memecah satu tuple
+        menjadi tiga bagian. Terakhir, program mencetak nilai <code>y</code>,
+        yaitu <code>6.4</code>.
+      </p>
+      <p>
+        Kita juga bisa mengakses elemen tuple langsung memakai titik
+        (<code>.</code>) diikuti indeks nilai yang ingin diakses:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let x: (i32, f64, u8) = (500, 6.4, 1);
+
+    let five_hundred = x.0;
+
+    let six_point_four = x.1;
+
+    let one = x.2;
+}</code></pre>
+      <p>
+        Program ini membuat tuple <code>x</code> lalu mengakses setiap
+        elemennya memakai indeksnya masing-masing. Seperti kebanyakan
+        bahasa pemrograman lain, indeks pertama di sebuah tuple adalah 0.
+      </p>
+      <p>
+        Tuple tanpa nilai apa pun punya nama khusus, <strong>unit</strong>.
+        Nilai ini dan tipenya sama-sama ditulis <code>()</code> dan
+        merepresentasikan nilai kosong atau tipe kembalian kosong. Ekspresi
+        secara implisit mengembalikan nilai unit kalau ia tidak
+        mengembalikan nilai lain.
+      </p>
+
+      <h3 id="array">Tipe Array</h3>
+      <p>
+        Cara lain untuk punya kumpulan beberapa nilai adalah dengan
+        <strong>array</strong>. Berbeda dari tuple, setiap elemen array
+        harus bertipe sama. Berbeda dari array di beberapa bahasa lain,
+        array di Rust punya panjang tetap.
+      </p>
+      <p>Kita menulis nilai array sebagai daftar dipisah koma di dalam kurung siku:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let a = [1, 2, 3, 4, 5];
+}</code></pre>
+      <p>
+        Array berguna ketika kamu ingin datamu dialokasikan di stack —
+        sama seperti tipe lain yang sudah kita lihat sejauh ini — bukan di
+        heap (kita akan bahas stack dan heap lebih lanjut di Bab 4), atau
+        ketika kamu ingin memastikan selalu punya jumlah elemen tetap. Array
+        tidak sefleksibel tipe vector. Vector adalah tipe koleksi serupa
+        dari standard library yang <em>boleh</em> bertambah atau berkurang
+        ukurannya karena isinya hidup di heap. Kalau kamu ragu harus pakai
+        array atau vector, kemungkinan besar kamu sebaiknya pakai vector.
+        Bab 8 membahas vector lebih detail.
+      </p>
+      <p>
+        Tapi, array lebih berguna ketika kamu tahu jumlah elemennya tidak
+        akan perlu berubah. Misalnya, kalau kamu memakai nama-nama bulan
+        dalam sebuah program, kamu mungkin akan memakai array daripada
+        vector karena kamu tahu isinya akan selalu 12 elemen:
+      </p>
+      <pre><code class="language-rust">let months = ["January", "February", "March", "April", "May", "June", "July",
+              "August", "September", "October", "November", "December"];</code></pre>
+      <p>
+        Kamu menulis tipe sebuah array dengan kurung siku berisi tipe tiap
+        elemennya, titik koma, lalu jumlah elemen dalam array itu:
+      </p>
+      <pre><code class="language-rust">let a: [i32; 5] = [1, 2, 3, 4, 5];</code></pre>
+      <p>
+        Di sini, <code>i32</code> adalah tipe setiap elemennya. Setelah
+        titik koma, angka <code>5</code> menandakan array ini berisi lima
+        elemen.
+      </p>
+      <p>
+        Kamu juga bisa menginisialisasi array supaya berisi nilai yang sama
+        untuk setiap elemen, dengan menuliskan nilai awal diikuti titik
+        koma, lalu panjang arraynya di dalam kurung siku:
+      </p>
+      <pre><code class="language-rust">let a = [3; 5];</code></pre>
+      <p>
+        Array bernama <code>a</code> ini akan berisi 5 elemen yang semuanya
+        diset ke nilai <code>3</code> pada awalnya. Ini sama saja dengan
+        menulis <code>let a = [3, 3, 3, 3, 3];</code>, tapi dengan cara yang
+        lebih ringkas.
+      </p>
+
+      <h4 id="akses-array">Mengakses Elemen Array</h4>
+      <p>
+        Array adalah satu blok memori berukuran tetap dan sudah diketahui,
+        yang bisa dialokasikan di stack. Kamu bisa mengakses elemen array
+        memakai indexing, seperti ini:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let a = [1, 2, 3, 4, 5];
+
+    let first = a[0];
+    let second = a[1];
+}</code></pre>
+      <p>
+        Di contoh ini, variabel <code>first</code> akan mendapat nilai
+        <code>1</code> karena itu nilai di indeks <code>[0]</code> dalam
+        array. Variabel <code>second</code> akan mendapat nilai <code>2</code>
+        dari indeks <code>[1]</code>.
+      </p>
+
+      <h4 id="akses-invalid">Mengakses Elemen Array yang Tidak Valid</h4>
+      <p>
+        Mari lihat apa yang terjadi kalau kamu mencoba mengakses elemen
+        array melewati ujung arraynya. Katakanlah kamu jalankan kode
+        berikut, mirip permainan tebak angka di Bab 2, untuk mendapatkan
+        indeks array dari pengguna:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">use std::io;
+
+fn main() {
+    let a = [1, 2, 3, 4, 5];
+
+    println!("Silakan masukkan indeks array.");
+
+    let mut index = String::new();
+
+    io::stdin()
+        .read_line(&mut index)
+        .expect("Gagal membaca baris input");
+
+    let index: usize = index
+        .trim()
+        .parse()
+        .expect("Indeks yang dimasukkan bukan angka");
+
+    let element = a[index];
+
+    println!("Nilai elemen di indeks {index} adalah: {element}");
+}</code></pre>
+      <p>
+        Kode ini berhasil dikompilasi. Kalau kamu jalankan dengan
+        <code>cargo run</code> dan masukkan <code>0</code>, <code>1</code>,
+        <code>2</code>, <code>3</code>, atau <code>4</code>, program akan
+        mencetak nilai yang sesuai di indeks itu. Tapi kalau kamu masukkan
+        angka melebihi ujung array, misalnya <code>10</code>, kamu akan
+        melihat output seperti ini:
+      </p>
+      <pre><code class="language-text">thread 'main' panicked at src/main.rs:19:19:
+index out of bounds: the len is 5 but the index is 10
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace</code></pre>
+      <p>
+        Program menghasilkan error runtime di titik ketika ia memakai nilai
+        yang tidak valid dalam operasi indexing. Program keluar dengan pesan
+        error dan tidak menjalankan <code>println!</code> terakhir. Ketika
+        kamu mencoba mengakses sebuah elemen memakai indexing, Rust akan
+        memeriksa bahwa indeks yang kamu tentukan lebih kecil dari panjang
+        arraynya. Kalau indeksnya sama dengan atau lebih besar dari panjang
+        itu, Rust akan panic. Pengecekan ini harus terjadi saat runtime,
+        khususnya di kasus ini, karena compiler tidak mungkin tahu nilai
+        apa yang akan dimasukkan pengguna saat program dijalankan nanti.
+      </p>
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Ini contoh keamanan memori Rust dalam aksi</p>
+        <p>
+          Di banyak bahasa low-level, pengecekan semacam ini tidak
+          dilakukan, dan ketika kamu memberikan indeks yang salah, memori
+          yang tidak valid bisa diakses. Rust melindungimu dari jenis error
+          ini dengan langsung keluar (panic), bukannya mengizinkan akses
+          memori itu dan terus berjalan. Bab 9 membahas lebih lanjut soal
+          penanganan error di Rust dan cara menulis kode yang aman tanpa
+          panic maupun akses memori yang tidak valid.
+        </p>
+      </div>
+
+      <div class="quiz">
+        <p class="quiz-question">Kenapa Rust memakai <code>i32</code> sebagai tipe integer default, bukan misalnya <code>i8</code> yang lebih hemat memori?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="i8 justru valid dan bisa dipakai kapan saja kamu butuh — tapi bukan itu alasannya jadi bukan default.">Karena i8 tidak valid di Rust</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat — i32 umumnya cepat bahkan di sistem 64-bit, dan cukup besar untuk kebanyakan kasus penggunaan sehari-hari, jadi dipilih sebagai default yang aman dan praktis." >i32 umumnya merupakan pilihan tercepat di kebanyakan sistem modern dan cukup besar untuk sebagian besar kebutuhan</button>
+          <button class="quiz-option" data-explain="usize memang dipakai untuk indexing, tapi bukan berarti dia default untuk semua integer — itu peran i32.">Karena usize selalu jadi tipe default untuk semua integer di Rust</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Tipe scalar: integer (<code>i8</code>...<code>i128</code>, <code>u8</code>...<code>u128</code>, <code>isize</code>/<code>usize</code>), float (<code>f32</code>/<code>f64</code>), <code>bool</code>, dan <code>char</code> (4 byte, Unicode scalar value).</li>
+          <li>Integer overflow menyebabkan panic di mode debug, dan "wrap around" di mode release — keduanya bukan perilaku yang boleh diandalkan.</li>
+          <li>Tuple mengelompokkan nilai dengan tipe berbeda-beda, panjang tetap, diakses lewat destructuring atau <code>.0</code>, <code>.1</code>, dst.</li>
+          <li>Array mengelompokkan nilai bertipe sama, panjang tetap, dialokasikan di stack, dan diakses lewat indexing <code>a[i]</code> — akses di luar batas menyebabkan panic saat runtime.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

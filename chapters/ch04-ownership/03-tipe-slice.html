@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4.3 Tipe Slice — Belajar Rust</title>
+<meta name="description" content="Slice memungkinkan merujuk sebagian data secara aman tanpa memiliki ownership-nya — string slice (&str) dan slice array.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch04-03">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 4: Memahami Ownership</nav>
+    <article>
+      <p class="chapter-label">Bab 4.3</p>
+      <h1>Tipe Slice</h1>
+
+      <p class="lead">
+        <strong>Slice</strong> memungkinkanmu merujuk ke sebuah urutan
+        elemen yang berdekatan (contiguous) dalam sebuah koleksi, bukan
+        keseluruhan koleksi itu. Slice adalah semacam referensi, jadi ia
+        tidak punya ownership.
+      </p>
+      <p>
+        Berikut soal pemrograman kecil: tulis sebuah fungsi yang menerima
+        sebuah string berisi kata-kata dipisah spasi, dan mengembalikan
+        kata pertama yang ditemukan dalam string itu. Kalau fungsi ini
+        tidak menemukan spasi dalam string-nya, seluruh string harus
+        dianggap satu kata, jadi seluruh string itu harus dikembalikan.
+      </p>
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Asumsi ASCII</p>
+        <p>
+          Untuk keperluan memperkenalkan slice, kita asumsikan hanya ASCII
+          di subbab ini; pembahasan lebih menyeluruh soal penanganan UTF-8
+          ada di subbab 8.2 (Storing UTF-8 Encoded Text with Strings).
+        </p>
+      </div>
+      <p>
+        Mari kita coba dulu menulis signature fungsi ini tanpa memakai
+        slice, supaya kita paham masalah yang akan diselesaikan slice:
+      </p>
+      <pre><code class="language-rust">fn first_word(s: &String) -> ?</code></pre>
+      <p>
+        Fungsi <code>first_word</code> punya parameter bertipe
+        <code>&amp;String</code>. Kita tidak butuh ownership-nya, jadi ini
+        sudah pas. (Di Rust yang idiomatis, fungsi tidak mengambil
+        ownership argumennya kecuali memang butuh, dan alasannya akan
+        makin jelas seiring kita lanjut.) Tapi apa yang seharusnya kita
+        kembalikan? Kita sebenarnya tidak punya cara membicarakan
+        <em>bagian</em> dari sebuah string. Tapi, kita bisa mengembalikan
+        indeks akhir kata itu, ditandai sebuah spasi. Mari coba, seperti
+        berikut:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn first_word(s: &String) -> usize {
+    let bytes = s.as_bytes();
+
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return i;
+        }
+    }
+
+    s.len()
+}</code></pre>
+      <p>
+        Karena kita perlu melewati <code>String</code> elemen demi elemen
+        dan memeriksa apakah sebuah nilai adalah spasi, kita akan
+        mengonversi <code>String</code> kita menjadi array byte memakai
+        method <code>as_bytes</code>.
+      </p>
+      <pre><code class="language-rust">let bytes = s.as_bytes();</code></pre>
+      <p>Selanjutnya, kita buat sebuah iterator di atas array byte itu memakai method <code>iter</code>:</p>
+      <pre><code class="language-rust">for (i, &item) in bytes.iter().enumerate() {</code></pre>
+      <p>
+        Kita akan bahas iterator lebih detail di Bab 13. Untuk sekarang,
+        cukup tahu bahwa <code>iter</code> adalah method yang mengembalikan
+        setiap elemen dalam sebuah koleksi, dan <code>enumerate</code>
+        membungkus hasil <code>iter</code> dan mengembalikan setiap elemen
+        sebagai bagian dari sebuah tuple. Elemen pertama dari tuple yang
+        dikembalikan <code>enumerate</code> adalah indeksnya, dan elemen
+        kedua adalah referensi ke elemennya. Ini sedikit lebih praktis
+        daripada menghitung indeksnya sendiri.
+      </p>
+      <p>
+        Karena method <code>enumerate</code> mengembalikan sebuah tuple,
+        kita bisa memakai pattern untuk men-destructure tuple itu. Kita
+        akan bahas pattern lebih lanjut di Bab 6. Di loop <code>for</code>,
+        kita menentukan sebuah pattern yang punya <code>i</code> untuk
+        indeksnya dan <code>&amp;item</code> untuk satu byte dalam
+        tuple-nya. Karena kita mendapat referensi ke elemennya dari
+        <code>.iter().enumerate()</code>, kita memakai <code>&amp;</code>
+        di pattern-nya.
+      </p>
+      <p>
+        Di dalam loop <code>for</code>, kita mencari byte yang
+        merepresentasikan spasi memakai sintaks byte literal. Kalau kita
+        menemukan spasi, kita kembalikan posisinya. Kalau tidak, kita
+        kembalikan panjang string-nya memakai <code>s.len()</code>.
+      </p>
+      <pre><code class="language-rust">if item == b' ' {
+    return i;
+}
+
+s.len()</code></pre>
+      <p>
+        Sekarang kita punya cara mencari tahu indeks akhir kata pertama
+        dalam string, tapi ada masalah. Kita mengembalikan <code>usize</code>
+        sendirian, tapi itu cuma angka yang bermakna dalam konteks
+        <code>&amp;String</code>-nya. Dengan kata lain, karena ini nilai
+        terpisah dari <code>String</code>-nya, tidak ada jaminan ia akan
+        tetap valid di masa depan. Perhatikan program berikut yang memakai
+        fungsi <code>first_word</code> di atas:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let mut s = String::from("hello world");
+
+    let word = first_word(&s); // word akan bernilai 5
+
+    s.clear(); // ini mengosongkan String-nya, membuatnya sama dengan ""
+
+    // word masih bernilai 5 di sini, tapi s sudah tidak punya konten yang
+    // bisa dipakai secara bermakna dengan nilai 5 itu, jadi word sekarang
+    // sepenuhnya tidak valid!
+}</code></pre>
+      <p>
+        Program ini berhasil dikompilasi tanpa error, dan tetap begitu
+        walaupun kita memakai <code>word</code> setelah memanggil
+        <code>s.clear()</code>. Karena <code>word</code> sama sekali tidak
+        terhubung dengan state <code>s</code>, <code>word</code> tetap
+        berisi nilai <code>5</code>. Kita bisa memakai nilai <code>5</code>
+        itu dengan variabel <code>s</code> untuk mencoba mengekstrak kata
+        pertamanya, tapi ini akan jadi bug karena isi <code>s</code> sudah
+        berubah sejak kita menyimpan <code>5</code> di <code>word</code>.
+      </p>
+      <p>
+        Harus khawatir soal indeks di <code>word</code> menjadi tidak
+        sinkron dengan data di <code>s</code> itu merepotkan dan rawan
+        error! Mengelola indeks-indeks ini bahkan lebih rapuh kalau kita
+        menulis fungsi <code>second_word</code>. Signature-nya harus
+        seperti ini:
+      </p>
+      <pre><code class="language-rust">fn second_word(s: &String) -> (usize, usize) {</code></pre>
+      <p>
+        Sekarang kita melacak indeks awal <strong>dan</strong> akhir, dan
+        kita punya lebih banyak lagi nilai yang dihitung dari data pada
+        state tertentu tapi sama sekali tidak terikat ke state itu. Kita
+        punya tiga variabel tidak berhubungan yang mengambang dan harus
+        dijaga tetap sinkron.
+      </p>
+      <p>Untungnya, Rust punya solusi untuk masalah ini: string slice.</p>
+
+      <h2 id="string-slice">String Slice</h2>
+      <p>
+        <strong>String slice</strong> adalah referensi ke urutan elemen
+        yang berdekatan dari sebuah <code>String</code>, dan terlihat
+        seperti ini:
+      </p>
+      <pre><code class="language-rust">let s = String::from("hello world");
+
+let hello = &s[0..5];
+let world = &s[6..11];</code></pre>
+      <p>
+        Alih-alih referensi ke seluruh <code>String</code>, <code>hello</code>
+        adalah referensi ke sebagian <code>String</code>, ditentukan lewat
+        bagian tambahan <code>[0..5]</code>. Kita membuat slice memakai
+        sebuah range di dalam kurung siku dengan menentukan
+        <code>[starting_index..ending_index]</code>, di mana
+        <code>starting_index</code> adalah posisi pertama dalam slice-nya
+        dan <code>ending_index</code> adalah satu lebih dari posisi
+        terakhir dalam slice-nya. Secara internal, struktur data slice
+        menyimpan posisi awal dan panjang slice-nya, yang sama dengan
+        <code>ending_index</code> dikurangi <code>starting_index</code>.
+        Jadi, untuk <code>let world = &amp;s[6..11];</code>,
+        <code>world</code> akan jadi slice yang berisi pointer ke byte di
+        indeks 6 dari <code>s</code> dengan nilai panjang <code>5</code>.
+      </p>
+      <figure class="diagram">
+        <img src="../../assets/img/trpl04-07.svg" alt="String slice merujuk ke sebagian String: word menyimpan ptr yang menunjuk ke byte ke-6 data 'hello world' di heap, dengan len 5.">
+        <figcaption>Gambar 4-7: String slice yang merujuk ke sebagian String</figcaption>
+      </figure>
+      <p>
+        Dengan sintaks range <code>..</code> Rust, kalau kamu ingin mulai
+        dari indeks 0, kamu bisa menghilangkan nilai sebelum dua titiknya.
+        Dengan kata lain, ini setara:
+      </p>
+      <pre><code class="language-rust">let s = String::from("hello");
+
+let slice = &s[0..2];
+let slice = &s[..2];</code></pre>
+      <p>
+        Dengan logika yang sama, kalau slice-mu menyertakan byte terakhir
+        dari <code>String</code>-nya, kamu bisa menghilangkan angka di
+        belakangnya. Artinya ini setara:
+      </p>
+      <pre><code class="language-rust">let s = String::from("hello");
+
+let len = s.len();
+
+let slice = &s[3..len];
+let slice = &s[3..];</code></pre>
+      <p>Kamu juga bisa menghilangkan kedua nilainya untuk mengambil slice dari keseluruhan string. Jadi, ini setara:</p>
+      <pre><code class="language-rust">let s = String::from("hello");
+
+let len = s.len();
+
+let slice = &s[0..len];
+let slice = &s[..];</code></pre>
+      <div class="callout callout-warning">
+        <p class="callout-title">⚠️ Batas karakter UTF-8</p>
+        <p>
+          Indeks range string slice harus berada di batas karakter UTF-8
+          yang valid. Kalau kamu mencoba membuat string slice di
+          tengah-tengah karakter multi-byte, programmu akan keluar dengan
+          error.
+        </p>
+      </div>
+      <p>
+        Dengan semua informasi ini, mari kita tulis ulang
+        <code>first_word</code> supaya mengembalikan sebuah slice. Tipe
+        yang menandakan "string slice" ditulis sebagai <code>&amp;str</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn first_word(s: &String) -> &str {
+    let bytes = s.as_bytes();
+
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[0..i];
+        }
+    }
+
+    &s[..]
+}</code></pre>
+      <p>
+        Kita mendapat indeks akhir katanya dengan cara yang sama seperti
+        sebelumnya, dengan mencari kemunculan spasi pertama. Ketika kita
+        menemukan spasi, kita kembalikan sebuah string slice memakai awal
+        string-nya dan indeks spasinya sebagai indeks awal dan akhir.
+      </p>
+      <p>
+        Sekarang ketika kita memanggil <code>first_word</code>, kita
+        mendapat satu nilai yang terikat ke data aslinya. Nilai itu
+        tersusun dari sebuah referensi ke titik awal slice-nya dan jumlah
+        elemen dalam slice itu.
+      </p>
+      <p>Mengembalikan slice juga akan bekerja untuk fungsi <code>second_word</code>:</p>
+      <pre><code class="language-rust">fn second_word(s: &String) -> &str {</code></pre>
+      <p>
+        Sekarang kita punya API yang jauh lebih sulit dikacaukan, karena
+        compiler akan memastikan referensi ke <code>String</code>-nya tetap
+        valid. Ingat bug di program sebelumnya, ketika kita mendapat indeks
+        akhir kata pertama tapi kemudian mengosongkan string-nya sehingga
+        indeks kita jadi tidak valid? Kode itu secara logis salah tapi
+        tidak menunjukkan error langsung. Masalahnya baru muncul kemudian
+        kalau kita terus mencoba memakai indeks kata pertama itu dengan
+        string yang sudah dikosongkan. Slice membuat bug ini mustahil
+        terjadi dan memberi tahu kita jauh lebih cepat kalau ada masalah
+        dengan kode kita. Memakai versi slice dari <code>first_word</code>
+        akan melempar error compile-time:
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let mut s = String::from("hello world");
+
+    let word = first_word(&s);
+
+    s.clear(); // error!
+
+    println!("the first word is: {word}");
+}</code></pre>
+      <p>Berikut error compiler-nya:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0502]: cannot borrow `s` as mutable because it is also borrowed as immutable
+  --> src/main.rs:18:5
+   |
+16 |     let word = first_word(&s);
+   |                           -- immutable borrow occurs here
+17 |
+18 |     s.clear(); // error!
+   |     ^^^^^^^^^ mutable borrow occurs here
+19 |
+20 |     println!("the first word is: {word}");
+   |                                   ---- immutable borrow later used here
+
+For more information about this error, try `rustc --explain E0502`.
+error: could not compile `ownership` (bin "ownership") due to 1 previous error</code></pre>
+      <p>
+        Ingat dari aturan borrowing: kalau kita punya immutable reference
+        ke sesuatu, kita tidak boleh juga mengambil mutable reference.
+        Karena <code>clear</code> perlu mengosongkan (truncate)
+        <code>String</code>-nya, ia butuh mutable reference. <code>println!</code>
+        setelah pemanggilan <code>clear</code> memakai referensi di
+        <code>word</code>, jadi immutable reference-nya harus masih aktif
+        di titik itu. Rust melarang mutable reference di <code>clear</code>
+        dan immutable reference di <code>word</code> ada bersamaan pada
+        saat yang sama, dan kompilasinya gagal. Rust tidak cuma membuat
+        API kita lebih mudah dipakai, tapi juga menghilangkan seluruh
+        kelas error ini saat compile-time!
+      </p>
+
+      <h3 id="string-literal-slice">String Literal sebagai Slice</h3>
+      <p>Ingat kita membahas bahwa string literal disimpan di dalam binary. Sekarang kita sudah tahu tentang slice, kita bisa memahami string literal dengan lebih tepat:</p>
+      <pre><code class="language-rust">let s = "Hello, world!";</code></pre>
+      <p>
+        Tipe <code>s</code> di sini adalah <code>&amp;str</code>: ini
+        adalah slice yang menunjuk ke titik tertentu di binary-nya. Ini
+        juga kenapa string literal bersifat immutable — <code>&amp;str</code>
+        adalah referensi yang immutable.
+      </p>
+
+      <h3 id="string-slice-parameter">String Slice sebagai Parameter</h3>
+      <p>
+        Mengetahui bahwa kamu bisa mengambil slice dari literal maupun
+        nilai <code>String</code> mengarahkan kita ke satu penyempurnaan
+        lagi untuk <code>first_word</code>, yaitu signature-nya:
+      </p>
+      <pre><code class="language-rust">fn first_word(s: &String) -> &str {</code></pre>
+      <p>
+        Rustacean yang lebih berpengalaman akan menulis signature berikut
+        alih-alih, karena ini memungkinkan kita memakai fungsi yang sama
+        baik pada nilai <code>&amp;String</code> maupun <code>&amp;str</code>:
+      </p>
+      <pre><code class="language-rust">fn first_word(s: &str) -> &str {
+    let bytes = s.as_bytes();
+
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[0..i];
+        }
+    }
+
+    &s[..]
+}</code></pre>
+      <p>
+        Kalau kita punya string slice, kita bisa mengopernya langsung.
+        Kalau kita punya <code>String</code>, kita bisa mengoper sebuah
+        slice dari <code>String</code> itu atau referensi ke
+        <code>String</code>-nya. Fleksibilitas ini memanfaatkan
+        <em>deref coercion</em>, fitur yang akan kita bahas di Bab 15.
+      </p>
+      <p>
+        Mendefinisikan sebuah fungsi untuk menerima string slice alih-alih
+        referensi ke <code>String</code> membuat API kita lebih umum dan
+        berguna tanpa kehilangan fungsionalitas apa pun:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let my_string = String::from("hello world");
+
+    // `first_word` bekerja pada slice dari `String`, baik sebagian maupun utuh.
+    let word = first_word(&my_string[0..6]);
+    let word = first_word(&my_string[..]);
+    // `first_word` juga bekerja pada referensi ke `String`, yang setara
+    // dengan slice utuh dari `String`.
+    let word = first_word(&my_string);
+
+    let my_string_literal = "hello world";
+
+    // `first_word` bekerja pada slice dari string literal, baik sebagian
+    // maupun utuh.
+    let word = first_word(&my_string_literal[0..6]);
+    let word = first_word(&my_string_literal[..]);
+
+    // Karena string literal itu *sudah* string slice,
+    // ini juga bekerja, tanpa perlu sintaks slice sama sekali!
+    let word = first_word(my_string_literal);
+}</code></pre>
+
+      <h2 id="slice-lain">Slice Lainnya</h2>
+      <p>
+        String slice, seperti bisa kamu bayangkan, khusus untuk string.
+        Tapi ada juga tipe slice yang lebih umum. Perhatikan array berikut:
+      </p>
+      <pre><code class="language-rust">let a = [1, 2, 3, 4, 5];</code></pre>
+      <p>
+        Sama seperti kita mungkin ingin merujuk ke sebagian string, kita
+        mungkin juga ingin merujuk ke sebagian array. Kita bisa
+        melakukannya seperti ini:
+      </p>
+      <pre><code class="language-rust">let a = [1, 2, 3, 4, 5];
+
+let slice = &a[1..3];
+
+assert_eq!(slice, &[2, 3]);</code></pre>
+      <p>
+        Slice ini bertipe <code>&amp;[i32]</code>. Cara kerjanya sama
+        seperti string slice, dengan menyimpan referensi ke elemen pertama
+        dan sebuah panjang. Kamu akan memakai jenis slice ini untuk segala
+        macam koleksi lainnya. Kita akan bahas koleksi ini lebih detail
+        saat membahas vector di Bab 8.
+      </p>
+
+      <div class="quiz">
+        <p class="quiz-question">Kenapa versi <code>first_word</code> yang mengembalikan <code>&str</code> (slice) lebih aman daripada versi yang mengembalikan <code>usize</code> (indeks)?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="&str justru sedikit lebih 'berat' representasinya (pointer + length) dibanding usize (satu angka) — bukan itu keuntungan utamanya." >Karena &str memakai lebih sedikit memori daripada usize</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. Slice adalah referensi yang terikat pada aturan borrowing Rust — kalau string aslinya diubah (misalnya .clear()) selagi slice-nya masih dipakai, compiler akan menolak kode itu di compile-time. Sebuah usize hanyalah angka biasa yang bisa diam-diam menjadi tidak valid tanpa Rust pernah tahu.">Karena &str terikat pada aturan borrowing — compiler akan mencegahmu memakainya kalau data aslinya berubah, sementara usize hanyalah angka biasa yang bisa diam-diam menjadi tidak valid</button>
+          <button class="quiz-option" data-explain="Keduanya sama-sama valid dikembalikan dari sebuah fungsi biasa — bukan itu bedanya." >Karena usize tidak boleh dikembalikan dari fungsi di Rust</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan Bab 4</p>
+        <ul>
+          <li>Slice (<code>&amp;str</code> untuk string, <code>&amp;[T]</code> untuk koleksi lain) adalah referensi ke sebagian data berdekatan — tidak punya ownership, dan terikat aturan borrowing seperti referensi biasa.</li>
+          <li>Lebih suka menulis parameter fungsi bertipe <code>&amp;str</code> daripada <code>&amp;String</code> supaya fungsimu bekerja untuk string literal maupun <code>String</code>.</li>
+          <li>Konsep ownership, borrowing, dan slice bersama-sama menjamin keamanan memori Rust saat compile-time, tanpa garbage collector dan tanpa overhead runtime.</li>
+        </ul>
+        <p>
+          Ownership memengaruhi cara kerja banyak bagian lain Rust, jadi
+          kita akan membahas konsep-konsep ini lebih jauh sepanjang sisa
+          buku ini. Mari lanjut ke Bab 5 dan lihat cara mengelompokkan
+          data ke dalam sebuah <code>struct</code>.
+        </p>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

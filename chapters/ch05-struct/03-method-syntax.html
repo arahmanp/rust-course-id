@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5.3 Sintaks Method — Belajar Rust</title>
+<meta name="description" content="Mendefinisikan method lewat blok impl, parameter self, method dengan parameter tambahan, associated function, dan multiple impl blocks.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch05-03">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 5: Struct</nav>
+    <article>
+      <p class="chapter-label">Bab 5.3</p>
+      <h1>Sintaks Method</h1>
+
+      <p class="lead">
+        <strong>Method</strong> mirip dengan fungsi: kita mendeklarasikannya
+        dengan keyword <code>fn</code> dan sebuah nama, method bisa punya
+        parameter dan nilai kembalian, dan berisi kode yang dijalankan
+        ketika method itu dipanggil dari tempat lain. Berbeda dari fungsi,
+        method didefinisikan dalam konteks sebuah struct (atau enum atau
+        trait object, yang kita bahas di Bab 6 dan Bab 18), dan parameter
+        pertamanya selalu <code>self</code>, yang merepresentasikan
+        instance struct tempat method itu dipanggil.
+      </p>
+
+      <h2 id="sintaks">Sintaks Method</h2>
+      <p>
+        Mari ubah fungsi <code>area</code> yang menerima instance
+        <code>Rectangle</code> sebagai parameter, dan sebagai gantinya buat
+        method <code>area</code> yang didefinisikan pada struct
+        <code>Rectangle</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+
+    println!(
+        "Luas persegi panjangnya adalah {} pixel persegi.",
+        rect1.area()
+    );
+}</code></pre>
+      <p>
+        Untuk mendefinisikan fungsi dalam konteks <code>Rectangle</code>,
+        kita mulai blok <code>impl</code> (implementation) untuk
+        <code>Rectangle</code>. Semua yang ada di dalam blok
+        <code>impl</code> ini akan diasosiasikan dengan tipe
+        <code>Rectangle</code>. Lalu, kita pindahkan fungsi <code>area</code>
+        ke dalam kurung kurawal <code>impl</code> dan ubah parameter
+        pertama (dan dalam kasus ini, satu-satunya) menjadi <code>self</code>
+        di signature-nya dan di mana pun di badan fungsinya. Di
+        <code>main</code>, tempat kita dulu memanggil fungsi
+        <code>area</code> dan mengoper <code>rect1</code> sebagai argumen,
+        sekarang kita bisa memakai <strong>sintaks method</strong> untuk
+        memanggil method <code>area</code> pada instance
+        <code>Rectangle</code> kita. Sintaks method diletakkan setelah
+        sebuah instance: kita tambahkan titik diikuti nama method-nya,
+        tanda kurung, dan argumen apa pun.
+      </p>
+      <p>
+        Di signature <code>area</code>, kita pakai <code>&amp;self</code>
+        alih-alih <code>rectangle: &amp;Rectangle</code>.
+        <code>&amp;self</code> sebenarnya singkatan dari
+        <code>self: &amp;Self</code>. Di dalam blok <code>impl</code>,
+        tipe <code>Self</code> adalah alias untuk tipe tempat blok
+        <code>impl</code> itu berada. Method harus punya parameter bernama
+        <code>self</code> bertipe <code>Self</code> sebagai parameter
+        pertamanya, jadi Rust mengizinkanmu menyingkatnya cukup dengan
+        nama <code>self</code> di posisi parameter pertama. Perhatikan
+        kita tetap perlu memakai <code>&amp;</code> di depan singkatan
+        <code>self</code> untuk menandakan method ini meminjam instance
+        <code>Self</code>-nya, persis seperti yang kita lakukan di
+        <code>rectangle: &amp;Rectangle</code>. Method bisa mengambil
+        ownership <code>self</code>, meminjam <code>self</code> secara
+        immutable seperti yang kita lakukan di sini, atau meminjam
+        <code>self</code> secara mutable, sama seperti parameter lain
+        mana pun.
+      </p>
+      <p>
+        Kita memilih <code>&amp;self</code> di sini dengan alasan sama
+        seperti kita memakai <code>&amp;Rectangle</code> di versi
+        fungsinya: kita tidak ingin mengambil ownership-nya, kita cuma
+        ingin membaca data di struct-nya, bukan menulis ke situ. Kalau kita
+        ingin mengubah instance yang dipanggil method-nya sebagai bagian
+        dari apa yang dilakukan method itu, kita akan pakai
+        <code>&amp;mut self</code> sebagai parameter pertamanya. Punya
+        method yang mengambil ownership instance-nya cukup dengan memakai
+        <code>self</code> saja sebagai parameter pertama jarang terjadi;
+        teknik ini biasanya dipakai ketika method-nya mentransformasikan
+        <code>self</code> menjadi sesuatu yang lain dan kamu ingin mencegah
+        si pemanggil memakai instance aslinya lagi setelah transformasi
+        itu.
+      </p>
+      <p>
+        Alasan utama memakai method daripada fungsi, selain menyediakan
+        sintaks method dan tidak perlu mengulang tipe <code>self</code> di
+        setiap signature method, adalah untuk organisasi. Kita menaruh
+        semua hal yang bisa kita lakukan dengan instance sebuah tipe di
+        satu blok <code>impl</code>, alih-alih membuat pengguna kode kita
+        di masa depan mencari kemampuan <code>Rectangle</code> di berbagai
+        tempat berbeda dalam library yang kita sediakan.
+      </p>
+      <p>
+        Perhatikan kita bisa memilih memberi sebuah method nama yang sama
+        dengan salah satu field struct-nya. Misalnya, kita bisa
+        mendefinisikan method pada <code>Rectangle</code> yang juga
+        bernama <code>width</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">impl Rectangle {
+    fn width(&self) -> bool {
+        self.width > 0
+    }
+}
+
+fn main() {
+    let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+
+    if rect1.width() {
+        println!("Persegi panjangnya punya lebar bukan-nol; lebarnya {}", rect1.width);
+    }
+}</code></pre>
+      <p>
+        Di sini, kita memilih membuat method <code>width</code>
+        mengembalikan <code>true</code> kalau nilai di field
+        <code>width</code> instance-nya lebih besar dari <code>0</code>,
+        dan <code>false</code> kalau nilainya <code>0</code>: kita bisa
+        memakai field dengan nama sama di dalam sebuah method untuk tujuan
+        apa pun. Di <code>main</code>, ketika kita mengikuti
+        <code>rect1.width</code> dengan tanda kurung, Rust tahu kita
+        maksudnya method <code>width</code>. Ketika kita tidak memakai
+        tanda kurung, Rust tahu kita maksudnya field <code>width</code>.
+      </p>
+      <p>
+        Sering kali, tapi tidak selalu, ketika kita memberi sebuah method
+        nama yang sama dengan sebuah field, kita ingin method itu hanya
+        mengembalikan nilai di field-nya dan tidak melakukan apa pun yang
+        lain. Method seperti ini disebut <strong>getter</strong>, dan Rust
+        tidak otomatis mengimplementasikannya untuk field struct seperti
+        yang dilakukan beberapa bahasa lain. Getter berguna karena kamu
+        bisa membuat field-nya private tapi method-nya public, sehingga
+        memungkinkan akses read-only ke field itu sebagai bagian dari
+        public API tipe tersebut. Kita akan bahas apa itu public dan
+        private, serta cara menentukan sebuah field atau method sebagai
+        public atau private, di Bab 7.
+      </p>
+
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Ke mana perginya operator -&gt;?</p>
+        <p>
+          Di C dan C++, ada dua operator berbeda yang dipakai untuk
+          memanggil method: kamu pakai <code>.</code> kalau memanggil
+          method langsung pada objeknya, dan <code>-&gt;</code> kalau
+          memanggil method pada pointer ke objek itu dan perlu
+          men-dereference pointer-nya lebih dulu. Dengan kata lain, kalau
+          <code>object</code> adalah sebuah pointer,
+          <code>object-&gt;something()</code> mirip dengan
+          <code>(*object).something()</code>.
+        </p>
+        <p>
+          Rust tidak punya operator setara <code>-&gt;</code>; sebagai
+          gantinya, Rust punya fitur bernama <em>automatic referencing and
+          dereferencing</em>. Memanggil method adalah salah satu dari
+          sedikit tempat di Rust dengan perilaku ini.
+        </p>
+        <p>
+          Begini cara kerjanya: ketika kamu memanggil method dengan
+          <code>object.something()</code>, Rust otomatis menambahkan
+          <code>&amp;</code>, <code>&amp;mut</code>, atau <code>*</code>
+          supaya <code>object</code> cocok dengan signature method-nya.
+          Dengan kata lain, berikut ini sama:
+        </p>
+        <pre><code class="language-rust">p1.distance(&p2);
+(&p1).distance(&p2);</code></pre>
+        <p>
+          Yang pertama terlihat jauh lebih rapi. Perilaku automatic
+          referencing ini bekerja karena method punya penerima
+          (<em>receiver</em>) yang jelas — yaitu tipe <code>self</code>-nya.
+          Dengan mengetahui penerima dan nama sebuah method, Rust bisa
+          memastikan dengan pasti apakah method itu membaca
+          (<code>&amp;self</code>), mengubah (<code>&amp;mut self</code>),
+          atau mengonsumsi (<code>self</code>). Fakta bahwa Rust membuat
+          borrowing implisit untuk penerima method adalah bagian besar
+          dari apa yang membuat ownership terasa ergonomis di praktiknya.
+        </p>
+      </div>
+
+      <h2 id="method-parameter-tambahan">Method dengan Parameter Lebih Banyak</h2>
+      <p>
+        Mari berlatih memakai method dengan mengimplementasikan method
+        kedua pada struct <code>Rectangle</code>. Kali ini kita ingin
+        sebuah instance <code>Rectangle</code> menerima instance
+        <code>Rectangle</code> lain dan mengembalikan <code>true</code>
+        kalau <code>Rectangle</code> kedua itu bisa muat sepenuhnya di
+        dalam <code>self</code> (<code>Rectangle</code> pertama);
+        selain itu, ia harus mengembalikan <code>false</code>. Artinya,
+        begitu kita sudah mendefinisikan method <code>can_hold</code>,
+        kita ingin bisa menulis program berikut:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+    let rect2 = Rectangle {
+        width: 10,
+        height: 40,
+    };
+    let rect3 = Rectangle {
+        width: 60,
+        height: 45,
+    };
+
+    println!("Can rect1 hold rect2? {}", rect1.can_hold(&rect2));
+    println!("Can rect1 hold rect3? {}", rect1.can_hold(&rect3));
+}</code></pre>
+      <p>
+        Output yang diharapkan akan terlihat seperti berikut, karena kedua
+        dimensi <code>rect2</code> lebih kecil dari dimensi
+        <code>rect1</code>, tapi <code>rect3</code> lebih lebar dari
+        <code>rect1</code>:
+      </p>
+      <pre><code class="language-text">Can rect1 hold rect2? true
+Can rect1 hold rect3? false</code></pre>
+      <p>
+        Kita tahu kita ingin mendefinisikan sebuah method, jadi ia akan
+        ada di dalam blok <code>impl Rectangle</code>. Nama method-nya
+        akan jadi <code>can_hold</code>, dan ia akan menerima immutable
+        borrow dari <code>Rectangle</code> lain sebagai parameter. Kita
+        bisa tahu tipe parameternya dengan melihat kode yang memanggil
+        method itu: <code>rect1.can_hold(&amp;rect2)</code> mengoper
+        <code>&amp;rect2</code>, yaitu immutable borrow ke
+        <code>rect2</code>, sebuah instance <code>Rectangle</code>. Ini
+        masuk akal karena kita cuma perlu membaca <code>rect2</code>
+        (bukan menulis, yang berarti kita akan butuh mutable borrow), dan
+        kita ingin <code>main</code> tetap memegang ownership
+        <code>rect2</code> supaya kita bisa memakainya lagi setelah
+        memanggil method <code>can_hold</code>. Nilai kembalian
+        <code>can_hold</code> akan berupa Boolean, dan implementasinya
+        akan memeriksa apakah lebar dan tinggi <code>self</code> lebih
+        besar dari lebar dan tinggi <code>Rectangle</code> lainnya. Mari
+        tambahkan method baru <code>can_hold</code> ke blok
+        <code>impl</code> sebelumnya:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}</code></pre>
+      <p>
+        Ketika kita jalankan kode ini dengan fungsi <code>main</code>
+        sebelumnya, kita akan dapat output yang kita inginkan. Method bisa
+        menerima banyak parameter yang kita tambahkan ke signature-nya
+        setelah parameter <code>self</code>, dan parameter-parameter itu
+        bekerja persis seperti parameter di fungsi biasa.
+      </p>
+
+      <h2 id="associated-function">Associated Function</h2>
+      <p>
+        Semua fungsi yang didefinisikan di dalam blok <code>impl</code>
+        disebut <strong>associated function</strong> karena mereka
+        diasosiasikan dengan tipe yang disebut setelah <code>impl</code>.
+        Kita bisa mendefinisikan associated function yang tidak punya
+        <code>self</code> sebagai parameter pertamanya (dan karena itu
+        bukan method) karena mereka tidak butuh instance dari tipe itu
+        untuk bekerja. Kita sudah memakai satu fungsi seperti ini: fungsi
+        <code>String::from</code> yang didefinisikan pada tipe
+        <code>String</code>.
+      </p>
+      <p>
+        Associated function yang bukan method sering dipakai untuk
+        constructor yang mengembalikan instance baru dari struct-nya.
+        Fungsi ini sering dinamai <code>new</code>, tapi <code>new</code>
+        bukan nama khusus dan tidak dibangun ke dalam bahasanya. Misalnya,
+        kita bisa memilih menyediakan associated function bernama
+        <code>square</code> yang menerima satu parameter dimensi dan
+        memakainya baik sebagai lebar maupun tinggi, sehingga lebih mudah
+        membuat <code>Rectangle</code> berbentuk persegi tanpa harus
+        menentukan nilai yang sama dua kali:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">impl Rectangle {
+    fn square(size: u32) -> Self {
+        Self {
+            width: size,
+            height: size,
+        }
+    }
+}</code></pre>
+      <p>
+        Keyword <code>Self</code> di tipe kembalian dan di badan fungsinya
+        adalah alias untuk tipe yang muncul setelah keyword
+        <code>impl</code>, yang dalam kasus ini adalah <code>Rectangle</code>.
+      </p>
+      <p>
+        Untuk memanggil associated function ini, kita pakai sintaks
+        <code>::</code> dengan nama struct-nya; contohnya
+        <code>let sq = Rectangle::square(3);</code>. Fungsi ini
+        di-namespace oleh struct-nya: sintaks <code>::</code> dipakai
+        baik untuk associated function maupun namespace yang dibuat oleh
+        module. Kita akan bahas module di Bab 7.
+      </p>
+
+      <h2 id="multiple-impl">Banyak Blok impl</h2>
+      <p>
+        Setiap struct diizinkan punya banyak blok <code>impl</code>.
+        Misalnya, kode <code>can_hold</code> sebelumnya setara dengan kode
+        berikut, yang menaruh setiap method di blok <code>impl</code>-nya
+        masing-masing:
+      </p>
+      <pre><code class="language-rust">impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+impl Rectangle {
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}</code></pre>
+      <p>
+        Tidak ada alasan khusus untuk memisahkan method-method ini menjadi
+        beberapa blok <code>impl</code> di sini, tapi ini sintaks yang
+        valid. Kita akan lihat kasus di mana banyak blok <code>impl</code>
+        berguna di Bab 10, saat kita membahas tipe generik dan trait.
+      </p>
+
+      <div class="quiz">
+        <p class="quiz-question">Ekspresi <code>rect1.width()</code> dan <code>rect1.width</code> sama-sama valid dalam contoh di atas. Apa bedanya?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Rust bisa membedakan keduanya justru berdasarkan ADA-tidaknya tanda kurung — bukan berdasarkan urutan definisi." >Keduanya benar-benar sama persis, cuma gaya penulisan berbeda</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. rect1.width (tanpa kurung) mengakses field width secara langsung. rect1.width() (dengan kurung) memanggil METHOD bernama width yang kita definisikan di blok impl — dalam contoh ini method itu mengembalikan bool (apakah width > 0), bukan nilai width itu sendiri." >rect1.width mengakses field secara langsung, sedangkan rect1.width() memanggil method bernama width — di contoh ini method-nya sengaja dibuat mengembalikan bool, bukan nilai field-nya</button>
+          <button class="quiz-option" data-explain="Rust tidak melarang kombinasi ini sama sekali — inilah justru salah satu contoh resminya dari buku aslinya." >Rust melarang method dan field punya nama yang sama, jadi salah satunya pasti error</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan Bab 5</p>
+        <ul>
+          <li>Struct membiarkanmu membuat tipe custom yang bermakna untuk domainmu, dengan mengelompokkan data terkait dan memberi nama pada setiap bagiannya.</li>
+          <li>Di blok <code>impl</code>, kamu mendefinisikan associated function — method (parameter pertama <code>self</code>/<code>&amp;self</code>/<code>&amp;mut self</code>) dan constructor tanpa <code>self</code> (dipanggil lewat <code>Tipe::nama_fungsi(...)</code>).</li>
+          <li><code>&amp;self</code> untuk membaca, <code>&amp;mut self</code> untuk mengubah, dan <code>self</code> (tanpa <code>&amp;</code>) untuk mengambil ownership instance-nya — pilih sesuai kebutuhan method-nya.</li>
+        </ul>
+        <p>
+          Tapi struct bukan satu-satunya cara kamu bisa membuat tipe
+          custom: mari kita beralih ke fitur enum Rust untuk menambah alat
+          lain ke toolbox-mu.
+        </p>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

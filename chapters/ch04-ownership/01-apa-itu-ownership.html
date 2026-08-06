@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4.1 Apa itu Ownership? — Belajar Rust</title>
+<meta name="description" content="Aturan ownership Rust, scope variabel, tipe String, move, clone, dan trait Copy — fondasi cara Rust mengelola memori tanpa garbage collector.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch04-01">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 4: Memahami Ownership</nav>
+    <article>
+      <p class="chapter-label">Bab 4.1</p>
+      <h1>Apa itu Ownership?</h1>
+
+      <p class="lead">
+        <strong>Ownership</strong> adalah sekumpulan aturan yang mengatur
+        bagaimana program Rust mengelola memori. Semua program harus
+        mengelola cara mereka memakai memori komputer selagi berjalan.
+        Beberapa bahasa punya <em>garbage collection</em> yang secara berkala
+        mencari memori yang sudah tidak dipakai lagi selama program
+        berjalan; di bahasa lain, programmer harus secara eksplisit
+        mengalokasikan dan membebaskan memori itu. Rust memakai pendekatan
+        ketiga: memori dikelola lewat sebuah sistem ownership dengan
+        sekumpulan aturan yang diperiksa compiler. Kalau ada aturan yang
+        dilanggar, programnya tidak akan bisa dikompilasi. Tidak satu pun
+        fitur ownership yang akan memperlambat programmu saat berjalan.
+      </p>
+      <p>
+        Karena ownership adalah konsep baru bagi banyak programmer,
+        memang butuh waktu untuk terbiasa. Kabar baiknya, semakin
+        berpengalaman kamu dengan Rust dan aturan sistem ownership-nya,
+        semakin mudah kamu akan menemukan dirimu secara alami menulis kode
+        yang aman dan efisien. Terus semangat!
+      </p>
+      <p>
+        Ketika kamu memahami ownership, kamu akan punya fondasi kokoh untuk
+        memahami fitur-fitur yang membuat Rust unik. Di bab ini, kamu akan
+        belajar ownership dengan mengerjakan beberapa contoh yang berfokus
+        pada struktur data yang sangat umum: string.
+      </p>
+
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Stack dan Heap</p>
+        <p>
+          Banyak bahasa pemrograman tidak mengharuskanmu memikirkan stack dan
+          heap terlalu sering. Tapi di bahasa systems programming seperti
+          Rust, apakah sebuah nilai berada di stack atau heap memengaruhi
+          perilaku bahasa itu dan kenapa kamu harus membuat keputusan
+          tertentu. Bagian dari ownership akan dijelaskan dalam kaitannya
+          dengan stack dan heap nanti di bab ini, jadi berikut penjelasan
+          singkat sebagai persiapan.
+        </p>
+        <p>
+          Stack dan heap sama-sama bagian dari memori yang tersedia untuk
+          kodemu pakai saat runtime, tapi keduanya terstruktur dengan cara
+          berbeda. <strong>Stack</strong> menyimpan nilai sesuai urutan ia
+          menerimanya dan menghapus nilai dengan urutan terbalik. Ini disebut
+          <em>last in, first out</em> (LIFO). Bayangkan tumpukan piring:
+          ketika kamu menambah piring, kamu meletakkannya di paling atas
+          tumpukan, dan ketika kamu butuh piring, kamu ambil dari paling
+          atas. Menambah atau mengambil piring dari tengah atau bawah tidak
+          akan bekerja dengan baik! Menambahkan data disebut
+          <em>pushing onto the stack</em>, dan menghapus data disebut
+          <em>popping off the stack</em>. Semua data yang disimpan di stack
+          harus punya ukuran yang sudah diketahui dan tetap. Data dengan
+          ukuran yang tidak diketahui saat compile-time, atau ukurannya bisa
+          berubah, harus disimpan di heap.
+        </p>
+        <p>
+          <strong>Heap</strong> kurang terorganisir: ketika kamu menaruh data
+          di heap, kamu meminta sejumlah ruang tertentu. Memory allocator
+          mencari tempat kosong di heap yang cukup besar, menandainya sedang
+          dipakai, dan mengembalikan sebuah <em>pointer</em> — alamat lokasi
+          itu. Proses ini disebut <em>allocating on the heap</em>, sering
+          disingkat <em>allocating</em> saja (push ke stack tidak dianggap
+          allocating). Karena pointer ke heap punya ukuran tetap yang sudah
+          diketahui, kamu bisa menyimpan pointer itu di stack, tapi kalau
+          kamu ingin data aslinya, kamu harus mengikuti pointer itu.
+          Bayangkan sedang duduk di sebuah restoran. Saat masuk, kamu
+          menyebutkan jumlah orang di rombonganmu, dan host mencari meja
+          kosong yang muat untuk semua orang lalu mengantarmu ke sana. Kalau
+          ada anggota rombongan yang datang terlambat, mereka bisa bertanya
+          di mana kamu duduk untuk menemukanmu.
+        </p>
+        <p>
+          Push ke stack lebih cepat daripada allocating di heap karena
+          allocator tidak pernah perlu mencari tempat untuk menyimpan data
+          baru — lokasinya selalu di paling atas stack. Sebaliknya,
+          mengalokasikan ruang di heap butuh lebih banyak kerja karena
+          allocator harus lebih dulu mencari ruang yang cukup besar untuk
+          menampung data itu, lalu melakukan pembukuan untuk mempersiapkan
+          alokasi berikutnya.
+        </p>
+        <p>
+          Mengakses data di heap umumnya lebih lambat daripada mengakses
+          data di stack karena kamu harus mengikuti sebuah pointer untuk
+          sampai ke sana. Prosesor modern lebih cepat kalau mereka tidak
+          banyak "melompat-lompat" di memori. Melanjutkan analoginya,
+          bayangkan seorang pelayan restoran mengambil pesanan dari banyak
+          meja. Paling efisien mengambil semua pesanan di satu meja dulu
+          sebelum pindah ke meja berikutnya. Mengambil pesanan dari meja A,
+          lalu meja B, lalu A lagi, lalu B lagi, akan jauh lebih lambat.
+          Dengan logika yang sama, prosesor biasanya bisa bekerja lebih baik
+          kalau ia memproses data yang berdekatan satu sama lain (seperti di
+          stack) daripada yang berjauhan (seperti bisa terjadi di heap).
+        </p>
+        <p>
+          Ketika kodemu memanggil sebuah fungsi, nilai-nilai yang dioper ke
+          fungsi itu (termasuk, mungkin saja, pointer ke data di heap) dan
+          variabel lokal fungsi itu di-push ke stack. Ketika fungsinya
+          selesai, nilai-nilai itu di-pop dari stack.
+        </p>
+        <p>
+          Melacak bagian kode mana yang memakai data apa di heap,
+          meminimalkan jumlah data duplikat di heap, dan membersihkan data
+          yang tidak dipakai lagi di heap supaya kamu tidak kehabisan ruang
+          — semua ini adalah masalah yang diselesaikan ownership. Begitu
+          kamu memahami ownership, kamu tidak akan perlu terlalu sering
+          memikirkan stack dan heap. Tapi mengetahui bahwa tujuan utama
+          ownership adalah mengelola data di heap bisa membantu menjelaskan
+          kenapa ownership bekerja seperti yang akan kamu lihat.
+        </p>
+      </div>
+
+      <h2 id="aturan-ownership">Aturan Ownership</h2>
+      <p>Pertama, mari lihat aturan ownership-nya. Ingat baik-baik aturan ini selagi kita mengerjakan contoh yang mengilustrasikannya:</p>
+      <ul>
+        <li>Setiap nilai di Rust punya sebuah <strong>owner</strong> (pemilik).</li>
+        <li>Hanya boleh ada satu owner dalam satu waktu.</li>
+        <li>Ketika owner keluar dari scope, nilainya akan di-<strong>drop</strong> (dibuang/dibersihkan).</li>
+      </ul>
+
+      <h2 id="scope-variabel">Scope Variabel</h2>
+      <p>
+        Sebagai contoh pertama ownership, kita akan lihat scope dari
+        beberapa variabel. <strong>Scope</strong> adalah rentang dalam
+        program di mana sebuah item dianggap valid. Perhatikan variabel
+        berikut:
+      </p>
+      <pre><code class="language-rust">let s = "hello";</code></pre>
+      <p>
+        Variabel <code>s</code> merujuk ke sebuah string literal, di mana
+        nilai string-nya sudah hardcoded di dalam teks programnya. Variabel
+        ini valid mulai dari titik ia dideklarasikan sampai akhir scope
+        saat ini. Berikut contoh program dengan komentar yang menandai di
+        mana variabel <code>s</code> valid:
+      </p>
+      <pre><code class="language-rust">{                      // s belum valid di sini, karena belum dideklarasikan
+    let s = "hello";   // s valid mulai dari titik ini
+    // lakukan sesuatu dengan s
+}                      // scope ini sudah berakhir, dan s sudah tidak valid lagi</code></pre>
+      <p>Dengan kata lain, ada dua titik waktu penting di sini:</p>
+      <ul>
+        <li>Ketika <code>s</code> masuk <em>ke dalam</em> scope, ia valid.</li>
+        <li>Ia tetap valid sampai ia keluar <em>dari</em> scope-nya.</li>
+      </ul>
+      <p>
+        Sejauh ini, hubungan antara scope dan kapan variabel valid mirip
+        dengan bahasa pemrograman lain. Sekarang kita akan membangun di atas
+        pemahaman ini dengan memperkenalkan tipe <code>String</code>.
+      </p>
+
+      <h2 id="tipe-string">Tipe String</h2>
+      <p>
+        Untuk mengilustrasikan aturan ownership, kita butuh tipe data yang
+        lebih kompleks dari yang sudah kita bahas di subbab 3.2 (Tipe Data).
+        Tipe-tipe yang sudah dibahas punya ukuran yang sudah diketahui, bisa
+        disimpan di stack dan di-pop ketika scope-nya berakhir, dan bisa
+        disalin dengan cepat dan trivial untuk membuat instance baru yang
+        independen kalau bagian kode lain perlu memakai nilai yang sama di
+        scope berbeda. Tapi kita ingin melihat data yang disimpan di heap
+        dan mengeksplorasi bagaimana Rust tahu kapan harus membersihkan data
+        itu — dan tipe <code>String</code> adalah contoh yang bagus.
+      </p>
+      <p>
+        Kita akan fokus pada bagian <code>String</code> yang berkaitan
+        dengan ownership. Aspek-aspek ini juga berlaku untuk tipe data
+        kompleks lain, baik yang disediakan standard library maupun yang
+        kamu buat sendiri. Kita akan bahas aspek <code>String</code> di
+        luar ownership di Bab 8.
+      </p>
+      <p>
+        Kita sudah melihat string literal, di mana nilai string sudah
+        hardcoded di programnya. String literal itu praktis, tapi tidak
+        cocok untuk semua situasi di mana kita mungkin ingin memakai teks.
+        Salah satu alasannya: mereka immutable. Alasan lain: tidak semua
+        nilai string bisa diketahui saat kita menulis kode — misalnya,
+        bagaimana kalau kita ingin menerima input pengguna dan
+        menyimpannya? Untuk situasi seperti ini, Rust punya tipe
+        <code>String</code>. Tipe ini mengelola data yang dialokasikan di
+        heap dan karena itu mampu menyimpan sejumlah teks yang tidak
+        diketahui saat compile-time. Kamu bisa membuat <code>String</code>
+        dari sebuah string literal memakai fungsi <code>from</code>:
+      </p>
+      <pre><code class="language-rust">let s = String::from("hello");</code></pre>
+      <p>
+        Operator titik dua ganda <code>::</code> memungkinkan kita
+        me-namespace fungsi <code>from</code> ini di bawah tipe
+        <code>String</code>, alih-alih memakai semacam nama seperti
+        <code>string_from</code>. Kita akan bahas sintaks ini lebih lanjut
+        di subbab 5.3 (Sintaks Method), dan ketika kita membahas namespacing
+        dengan module di Bab 7.
+      </p>
+      <p>Jenis string ini <em>bisa</em> diubah (mutable):</p>
+      <pre><code class="language-rust">let mut s = String::from("hello");
+
+s.push_str(", world!"); // push_str() menambahkan sebuah literal ke String
+
+println!("{s}"); // ini akan mencetak `hello, world!`</code></pre>
+      <p>
+        Jadi, apa bedanya di sini? Kenapa <code>String</code> bisa diubah
+        tapi literal tidak? Bedanya ada pada bagaimana kedua tipe ini
+        menangani memori.
+      </p>
+
+      <h2 id="memori-alokasi">Memori dan Alokasi</h2>
+      <p>
+        Untuk string literal, kita tahu isinya saat compile-time, jadi
+        teksnya langsung hardcoded ke dalam file executable final. Inilah
+        kenapa string literal cepat dan efisien. Tapi sifat-sifat ini hanya
+        berasal dari immutability string literal itu. Sayangnya, kita tidak
+        bisa menaruh sekumpulan memori ke dalam binary untuk setiap
+        potongan teks yang ukurannya tidak diketahui saat compile-time dan
+        ukurannya bisa berubah selagi program berjalan.
+      </p>
+      <p>
+        Dengan tipe <code>String</code>, untuk mendukung teks yang mutable
+        dan bisa bertambah panjang, kita perlu mengalokasikan sejumlah
+        memori di heap, yang tidak diketahui saat compile-time, untuk
+        menampung isinya. Ini berarti:
+      </p>
+      <ul>
+        <li>Memori harus diminta dari memory allocator saat runtime.</li>
+        <li>Kita butuh cara mengembalikan memori ini ke allocator ketika kita sudah selesai memakai <code>String</code> kita.</li>
+      </ul>
+      <p>
+        Bagian pertama dilakukan oleh kita: ketika kita memanggil
+        <code>String::from</code>, implementasinya meminta memori yang
+        dibutuhkan. Ini kurang lebih universal di bahasa pemrograman.
+      </p>
+      <p>
+        Tapi, bagian kedua berbeda. Di bahasa dengan <em>garbage collector
+        (GC)</em>, GC melacak dan membersihkan memori yang sudah tidak
+        dipakai lagi, dan kita tidak perlu memikirkannya. Di kebanyakan
+        bahasa tanpa GC, tanggung jawab kita untuk mengenali kapan memori
+        sudah tidak dipakai lagi dan memanggil kode untuk membebaskannya
+        secara eksplisit, sama seperti saat kita memintanya. Melakukan ini
+        dengan benar secara historis adalah masalah pemrograman yang sulit.
+        Kalau kita lupa, kita akan membuang-buang memori. Kalau kita
+        lakukan terlalu awal, kita akan punya variabel yang tidak valid.
+        Kalau kita lakukan dua kali, itu juga bug. Kita perlu memasangkan
+        tepat satu <code>allocate</code> dengan tepat satu <code>free</code>.
+      </p>
+      <p>
+        Rust mengambil jalur berbeda: memori otomatis dikembalikan begitu
+        variabel yang memilikinya keluar dari scope. Berikut versi contoh
+        scope kita sebelumnya, tapi memakai <code>String</code> alih-alih
+        string literal:
+      </p>
+      <pre><code class="language-rust">{
+    let s = String::from("hello"); // s valid mulai dari titik ini
+
+    // lakukan sesuatu dengan s
+}                                  // scope ini sudah berakhir, dan s
+                                   // sudah tidak valid lagi</code></pre>
+      <p>
+        Ada titik alami di mana kita bisa mengembalikan memori yang
+        dibutuhkan <code>String</code> kita ke allocator: ketika
+        <code>s</code> keluar dari scope. Ketika sebuah variabel keluar
+        dari scope, Rust memanggil sebuah fungsi khusus untuk kita. Fungsi
+        ini disebut <code>drop</code>, dan di sinilah penulis
+        <code>String</code> bisa menaruh kode untuk mengembalikan
+        memorinya. Rust memanggil <code>drop</code> secara otomatis di
+        kurung kurawal penutup.
+      </p>
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ RAII di C++</p>
+        <p>
+          Di C++, pola membebaskan resource di akhir lifetime sebuah item
+          kadang disebut <em>Resource Acquisition Is Initialization (RAII)</em>.
+          Fungsi <code>drop</code> di Rust akan terasa familier kalau kamu
+          pernah memakai pola RAII.
+        </p>
+      </div>
+      <p>
+        Pola ini punya dampak besar pada cara kode Rust ditulis. Mungkin
+        sekarang terlihat sederhana, tapi perilaku kode bisa jadi tidak
+        terduga dalam situasi lebih rumit ketika kita ingin beberapa
+        variabel memakai data yang sama yang sudah kita alokasikan di
+        heap. Mari eksplorasi beberapa situasi seperti itu sekarang.
+      </p>
+
+      <h3 id="move">Variabel dan Data Berinteraksi lewat Move</h3>
+      <p>Banyak variabel bisa berinteraksi dengan data yang sama dengan cara berbeda-beda di Rust. Contoh berikut memakai integer:</p>
+      <pre><code class="language-rust">let x = 5;
+let y = x;</code></pre>
+      <p>
+        Kita mungkin bisa menebak apa yang terjadi: "Ikat nilai
+        <code>5</code> ke <code>x</code>; lalu, buat salinan nilai di
+        <code>x</code> dan ikat ke <code>y</code>." Sekarang kita punya dua
+        variabel, <code>x</code> dan <code>y</code>, dan keduanya sama
+        dengan <code>5</code>. Ini memang yang terjadi, karena integer
+        adalah nilai sederhana dengan ukuran tetap yang sudah diketahui,
+        dan kedua nilai <code>5</code> itu di-push ke stack.
+      </p>
+      <p>Sekarang mari lihat versi <code>String</code>:</p>
+      <pre><code class="language-rust">let s1 = String::from("hello");
+let s2 = s1;</code></pre>
+      <p>
+        Ini terlihat sangat mirip, jadi kita mungkin berasumsi cara
+        kerjanya sama: baris kedua akan membuat salinan nilai di
+        <code>s1</code> dan mengikatnya ke <code>s2</code>. Tapi bukan
+        persis itu yang terjadi.
+      </p>
+      <p>
+        Sebuah <code>String</code> tersusun dari tiga bagian: sebuah
+        pointer ke memori yang menyimpan isi string-nya, sebuah panjang
+        (length), dan sebuah kapasitas (capacity). Kelompok data ini
+        disimpan di stack. Data di heap menyimpan isinya.
+      </p>
+      <figure class="diagram">
+        <img src="../../assets/img/trpl04-01.svg" alt="Representasi memori sebuah String bernilai 'hello' yang terikat ke s1: bagian stack (name, ptr, len=5, capacity=5) menunjuk ke data 'hello' di heap.">
+        <figcaption>Gambar 4-1: Representasi memori sebuah String bernilai "hello" yang terikat ke s1</figcaption>
+      </figure>
+      <p>
+        <em>Length</em> adalah berapa banyak memori, dalam byte, yang
+        sedang dipakai isi <code>String</code> saat ini. <em>Capacity</em>
+        adalah total memori, dalam byte, yang sudah diterima
+        <code>String</code> dari allocator. Beda antara length dan capacity
+        penting, tapi tidak dalam konteks ini, jadi untuk sekarang boleh
+        diabaikan dulu.
+      </p>
+      <p>
+        Ketika kita menetapkan <code>s1</code> ke <code>s2</code>, data
+        <code>String</code>-nya disalin — artinya kita menyalin pointer,
+        length, dan capacity yang ada di stack. Kita <strong>tidak</strong>
+        menyalin data di heap yang ditunjuk pointer itu. Dengan kata lain,
+        representasi data di memori terlihat seperti ini:
+      </p>
+      <figure class="diagram">
+        <img src="../../assets/img/trpl04-02.svg" alt="s1 dan s2 di stack, keduanya menunjuk ke data string yang sama di heap.">
+        <figcaption>Gambar 4-2: Representasi memori variabel s2 yang punya salinan pointer, length, dan capacity dari s1</figcaption>
+      </figure>
+      <p>
+        Representasinya <strong>bukan</strong> seperti berikut, yang akan
+        jadi tampilan memori kalau Rust justru ikut menyalin data heap-nya:
+      </p>
+      <figure class="diagram">
+        <img src="../../assets/img/trpl04-03.svg" alt="s1 dan s2 di stack, masing-masing menunjuk ke salinan data string-nya sendiri di heap.">
+        <figcaption>Gambar 4-3: Kemungkinan lain seandainya s2 = s1 juga menyalin data heap-nya</figcaption>
+      </figure>
+      <p>
+        Kalau Rust melakukan ini, operasi <code>s2 = s1</code> bisa sangat
+        mahal secara performa runtime kalau data di heap-nya besar.
+      </p>
+      <p>
+        Sebelumnya, kita bilang ketika sebuah variabel keluar dari scope,
+        Rust otomatis memanggil fungsi <code>drop</code> dan membersihkan
+        memori heap untuk variabel itu. Tapi Gambar 4-2 menunjukkan kedua
+        pointer data menunjuk ke lokasi yang sama. Ini masalah: ketika
+        <code>s2</code> dan <code>s1</code> keluar dari scope, keduanya
+        akan sama-sama mencoba membebaskan memori yang sama. Ini dikenal
+        sebagai error <strong>double free</strong>, salah satu bug
+        keamanan memori yang sudah kita sebutkan sebelumnya. Membebaskan
+        memori dua kali bisa menyebabkan korupsi memori, yang berpotensi
+        mengarah ke kerentanan keamanan.
+      </p>
+      <p>
+        Untuk memastikan keamanan memori, setelah baris
+        <code>let s2 = s1;</code>, Rust menganggap <code>s1</code> sudah
+        tidak valid lagi. Karena itu, Rust tidak perlu membebaskan apa pun
+        ketika <code>s1</code> keluar dari scope. Lihat apa yang terjadi
+        kalau kamu mencoba memakai <code>s1</code> setelah <code>s2</code>
+        dibuat — ini tidak akan bekerja:
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <pre><code class="language-rust">let s1 = String::from("hello");
+let s2 = s1;
+
+println!("{s1}, world!");</code></pre>
+      <p>Kamu akan mendapat error seperti ini karena Rust mencegahmu memakai referensi yang sudah tidak berlaku:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0382]: borrow of moved value: `s1`
+ --> src/main.rs:5:16
+  |
+2 |     let s1 = String::from("hello");
+  |         -- move occurs because `s1` has type `String`, which does not implement the `Copy` trait
+3 |     let s2 = s1;
+  |              -- value moved here
+4 |
+5 |     println!("{s1}, world!");
+  |                ^^ value borrowed here after move
+  |
+help: consider cloning the value if the performance cost is acceptable
+  |
+3 |     let s2 = s1.clone();
+  |                ++++++++
+
+For more information about this error, try `rustc --explain E0382`.
+error: could not compile `ownership` (bin "ownership") due to 1 previous error</code></pre>
+      <p>
+        Kalau kamu pernah mendengar istilah <em>shallow copy</em> dan
+        <em>deep copy</em> saat bekerja dengan bahasa lain, konsep menyalin
+        pointer, length, dan capacity tanpa menyalin datanya mungkin
+        terdengar seperti membuat shallow copy. Tapi karena Rust juga
+        membuat variabel pertamanya tidak valid, alih-alih disebut shallow
+        copy, ini dikenal sebagai <strong>move</strong>. Di contoh ini,
+        kita akan bilang <code>s1</code> di-<em>move</em> ke <code>s2</code>.
+        Jadi, yang sebenarnya terjadi terlihat seperti ini:
+      </p>
+      <figure class="diagram">
+        <img src="../../assets/img/trpl04-04.svg" alt="s1 dan s2 di stack, keduanya menunjuk ke data yang sama di heap, tapi s1 digambar pudar/abu-abu karena sudah tidak valid.">
+        <figcaption>Gambar 4-4: Representasi memori setelah s1 tidak lagi valid</figcaption>
+      </figure>
+      <p>
+        Itu menyelesaikan masalah kita! Dengan hanya <code>s2</code> yang
+        valid, ketika ia keluar dari scope, hanya dia sendiri yang akan
+        membebaskan memorinya, dan selesai.
+      </p>
+      <p>
+        Selain itu, ada pilihan desain yang tersirat dari ini: Rust tidak
+        akan pernah otomatis membuat salinan "dalam" (deep copy) dari
+        datamu. Karena itu, penyalinan <em>otomatis</em> apa pun bisa
+        diasumsikan murah secara performa runtime.
+      </p>
+
+      <h3 id="scope-assignment">Scope dan Assignment</h3>
+      <p>
+        Kebalikannya juga berlaku untuk hubungan antara scoping, ownership,
+        dan pembebasan memori lewat fungsi <code>drop</code>. Ketika kamu
+        menetapkan nilai yang sepenuhnya baru ke variabel yang sudah ada,
+        Rust akan memanggil <code>drop</code> dan langsung membebaskan
+        memori nilai aslinya. Perhatikan kode ini:
+      </p>
+      <pre><code class="language-rust">let mut s = String::from("hello");
+s = String::from("ahoy");
+
+println!("{s}, world!");</code></pre>
+      <p>
+        Kita awalnya mendeklarasikan variabel <code>s</code> dan
+        mengikatnya ke <code>String</code> bernilai <code>"hello"</code>.
+        Lalu, kita segera membuat <code>String</code> baru bernilai
+        <code>"ahoy"</code> dan menetapkannya ke <code>s</code>. Di titik
+        ini, tidak ada apa pun lagi yang merujuk ke nilai aslinya di heap.
+      </p>
+      <figure class="diagram">
+        <img src="../../assets/img/trpl04-05.svg" alt="s di stack menunjuk ke data 'ahoy' di heap, sementara data 'hello' yang lama digambar pudar karena sudah tidak bisa diakses lagi.">
+        <figcaption>Gambar 4-5: Representasi memori setelah nilai awal digantikan sepenuhnya</figcaption>
+      </figure>
+      <p>
+        String aslinya jadi langsung keluar dari scope. Rust akan
+        menjalankan fungsi <code>drop</code> padanya dan memorinya langsung
+        dibebaskan. Ketika kita mencetak nilainya di akhir, hasilnya adalah
+        <code>"ahoy, world!"</code>.
+      </p>
+
+      <h3 id="clone">Variabel dan Data Berinteraksi lewat Clone</h3>
+      <p>
+        Kalau kita <em>memang</em> ingin menyalin dalam (deep copy) data
+        heap dari sebuah <code>String</code>, bukan cuma data stack-nya,
+        kita bisa memakai method umum bernama <code>clone</code>. Kita akan
+        bahas sintaks method di Bab 5, tapi karena method adalah fitur umum
+        di banyak bahasa pemrograman, kamu mungkin sudah pernah melihatnya.
+      </p>
+      <p>Berikut contoh method <code>clone</code> dipakai:</p>
+      <pre><code class="language-rust">let s1 = String::from("hello");
+let s2 = s1.clone();
+
+println!("s1 = {s1}, s2 = {s2}");</code></pre>
+      <p>
+        Ini bekerja dengan baik dan secara eksplisit menghasilkan perilaku
+        seperti Gambar 4-3, di mana data heap-nya <strong>memang</strong>
+        disalin.
+      </p>
+      <p>
+        Ketika kamu melihat pemanggilan <code>clone</code>, kamu tahu
+        beberapa kode sembarang sedang dijalankan, dan kode itu mungkin
+        mahal. Ini indikator visual bahwa ada sesuatu yang berbeda sedang
+        terjadi.
+      </p>
+
+      <h3 id="copy">Data Stack Saja: Trait Copy</h3>
+      <p>
+        Ada satu hal lagi yang belum kita bahas. Kode memakai integer
+        berikut — sebagian sudah kita lihat sebelumnya — bekerja dan valid:
+      </p>
+      <pre><code class="language-rust">let x = 5;
+let y = x;
+
+println!("x = {x}, y = {y}");</code></pre>
+      <p>
+        Tapi kode ini sepertinya bertentangan dengan yang baru saja kita
+        pelajari: kita tidak memanggil <code>clone</code>, tapi
+        <code>x</code> tetap valid dan tidak di-move ke <code>y</code>.
+      </p>
+      <p>
+        Alasannya: tipe seperti integer yang punya ukuran diketahui saat
+        compile-time sepenuhnya disimpan di stack, jadi salinan nilai
+        aslinya cepat dibuat. Itu berarti tidak ada alasan kita ingin
+        mencegah <code>x</code> tetap valid setelah kita membuat variabel
+        <code>y</code>. Dengan kata lain, tidak ada beda antara deep copy
+        dan shallow copy di sini, jadi memanggil <code>clone</code> tidak
+        akan melakukan apa pun yang berbeda dari shallow copy biasa, dan
+        kita bisa melewatkannya.
+      </p>
+      <p>
+        Rust punya anotasi khusus bernama trait <code>Copy</code> yang bisa
+        kita taruh pada tipe yang disimpan di stack, seperti integer (kita
+        akan bahas trait lebih lanjut di Bab 10). Kalau sebuah tipe
+        mengimplementasikan trait <code>Copy</code>, variabel yang
+        memakainya tidak di-move, melainkan disalin secara trivial,
+        sehingga tetap valid setelah ditetapkan ke variabel lain.
+      </p>
+      <p>
+        Rust tidak akan mengizinkan kita menganotasi sebuah tipe dengan
+        <code>Copy</code> kalau tipe itu, atau bagian mana pun darinya,
+        sudah mengimplementasikan trait <code>Drop</code>. Kalau tipe itu
+        butuh sesuatu yang khusus terjadi ketika nilainya keluar dari
+        scope, dan kita menambahkan anotasi <code>Copy</code> pada tipe
+        itu, kita akan mendapat error compile-time. Untuk belajar cara
+        menambahkan anotasi <code>Copy</code> ke tipemu sendiri, lihat
+        "Derivable Traits" di Lampiran C.
+      </p>
+      <p>
+        Jadi, tipe apa saja yang mengimplementasikan trait <code>Copy</code>?
+        Kamu bisa memeriksa dokumentasi tipe tertentu untuk memastikan,
+        tapi sebagai aturan umum, kelompok nilai scalar sederhana apa pun
+        bisa mengimplementasikan <code>Copy</code>, dan apa pun yang butuh
+        alokasi atau berupa semacam resource tidak bisa mengimplementasikan
+        <code>Copy</code>. Berikut beberapa tipe yang mengimplementasikan
+        <code>Copy</code>:
+      </p>
+      <ul>
+        <li>Semua tipe integer, seperti <code>u32</code>.</li>
+        <li>Tipe Boolean, <code>bool</code>, dengan nilai <code>true</code> dan <code>false</code>.</li>
+        <li>Semua tipe floating-point, seperti <code>f64</code>.</li>
+        <li>Tipe karakter, <code>char</code>.</li>
+        <li>Tuple, kalau hanya berisi tipe yang juga mengimplementasikan <code>Copy</code>. Misalnya <code>(i32, i32)</code> mengimplementasikan <code>Copy</code>, tapi <code>(i32, String)</code> tidak.</li>
+      </ul>
+
+      <div class="quiz">
+        <p class="quiz-question">Kenapa <code>let y = x;</code> tidak membuat <code>x</code> tidak valid, kalau <code>x</code> bertipe <code>i32</code>, sementara <code>let s2 = s1;</code> membuat <code>s1</code> tidak valid kalau <code>s1</code> bertipe <code>String</code>?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Sebaliknya — i32 justru DISALIN, bukan di-move, sehingga x tetap valid. String di-move karena tidak mengimplementasikan Copy.">Karena i32 selalu di-move seperti String, hanya saja Rust menyembunyikan errornya</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. i32 berukuran tetap dan sepenuhnya hidup di stack sehingga mengimplementasikan trait Copy — disalin murah, x tetap valid. String punya data di heap dan tidak mengimplementasikan Copy, jadi assignment memindahkan (move) kepemilikannya, membuat s1 tidak valid lagi.">i32 mengimplementasikan trait Copy karena seluruhnya hidup di stack, sedangkan String punya data di heap sehingga di-move, bukan disalin</button>
+          <button class="quiz-option" data-explain="String memang bisa di-clone(), tapi assignment biasa (let s2 = s1;) TIDAK otomatis memanggil clone — itulah kenapa terjadi move, bukan penyalinan.">Karena String secara otomatis dipanggil .clone() di balik layar saat assignment</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <h2 id="ownership-fungsi">Ownership dan Fungsi</h2>
+      <p>
+        Mekanisme mengoper sebuah nilai ke fungsi mirip dengan mekanisme
+        saat menetapkan nilai ke sebuah variabel. Mengoper variabel ke
+        fungsi akan melakukan move atau copy, sama seperti assignment.
+        Contoh berikut punya anotasi yang menunjukkan kapan variabel masuk
+        dan keluar dari scope:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let s = String::from("hello");  // s masuk ke scope
+
+    takes_ownership(s);             // nilai s dipindah (move) ke fungsi ini...
+                                    // ...jadi s sudah tidak valid lagi di sini
+
+    let x = 5;                      // x masuk ke scope
+
+    makes_copy(x);                  // Karena i32 mengimplementasikan trait Copy,
+                                    // x TIDAK di-move ke fungsi ini,
+                                    // jadi x masih boleh dipakai setelahnya.
+
+} // Di sini, x keluar dari scope, lalu s. Tapi karena nilai s sudah di-move,
+  // tidak ada hal khusus yang terjadi.
+
+fn takes_ownership(some_string: String) { // some_string masuk ke scope
+    println!("{some_string}");
+} // Di sini, some_string keluar dari scope dan `drop` dipanggil. Memori
+  // di baliknya dibebaskan.
+
+fn makes_copy(some_integer: i32) { // some_integer masuk ke scope
+    println!("{some_integer}");
+} // Di sini, some_integer keluar dari scope. Tidak ada hal khusus yang terjadi.</code></pre>
+      <p>
+        Kalau kita coba memakai <code>s</code> setelah pemanggilan
+        <code>takes_ownership</code>, Rust akan melempar error
+        compile-time. Pengecekan statis ini melindungi kita dari kesalahan.
+        Coba tambahkan kode ke <code>main</code> yang memakai <code>s</code>
+        dan <code>x</code> untuk melihat di mana kamu bisa memakainya dan
+        di mana aturan ownership mencegahmu melakukannya.
+      </p>
+
+      <h2 id="return-scope">Nilai Kembalian dan Scope</h2>
+      <p>Mengembalikan nilai juga bisa memindahkan (transfer) ownership. Berikut contoh sebuah fungsi yang mengembalikan sebuah nilai, dengan anotasi serupa:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let s1 = gives_ownership();        // gives_ownership memindahkan nilai
+                                       // kembaliannya ke s1
+
+    let s2 = String::from("hello");    // s2 masuk ke scope
+
+    let s3 = takes_and_gives_back(s2); // s2 dipindah ke
+                                       // takes_and_gives_back, yang juga
+                                       // memindahkan nilai kembaliannya ke s3
+} // Di sini, s3 keluar dari scope dan di-drop. s2 sudah dipindah, jadi tidak
+  // terjadi apa-apa. s1 keluar dari scope dan di-drop.
+
+fn gives_ownership() -> String {       // gives_ownership akan memindahkan
+                                       // nilai kembaliannya ke fungsi yang
+                                       // memanggilnya
+
+    let some_string = String::from("yours"); // some_string masuk ke scope
+
+    some_string                        // some_string dikembalikan dan
+                                       // dipindah keluar ke fungsi pemanggil
+}
+
+// Fungsi ini menerima sebuah String dan mengembalikan sebuah String.
+fn takes_and_gives_back(a_string: String) -> String {
+    // a_string masuk ke scope
+
+    a_string  // a_string dikembalikan dan dipindah keluar ke fungsi pemanggil
+}</code></pre>
+      <p>
+        Ownership sebuah variabel selalu mengikuti pola yang sama:
+        menetapkan sebuah nilai ke variabel lain memindahkannya (move).
+        Ketika sebuah variabel yang berisi data di heap keluar dari scope,
+        nilainya akan dibersihkan oleh <code>drop</code> kecuali
+        ownership datanya sudah dipindah ke variabel lain.
+      </p>
+      <p>
+        Walau ini bekerja, mengambil ownership lalu mengembalikan ownership
+        di setiap fungsi cukup merepotkan. Bagaimana kalau kita ingin
+        sebuah fungsi memakai sebuah nilai tapi tidak mengambil
+        ownership-nya? Cukup menjengkelkan kalau apa pun yang kita oper
+        juga harus dioper kembali kalau kita ingin memakainya lagi,
+        ditambah data hasil dari badan fungsi yang mungkin ingin kita
+        kembalikan juga.
+      </p>
+      <p>Rust memang mengizinkan kita mengembalikan banyak nilai memakai tuple:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let s1 = String::from("hello");
+
+    let (s2, len) = calculate_length(s1);
+
+    println!("Panjang dari '{s2}' adalah {len}.");
+}
+
+fn calculate_length(s: String) -> (String, usize) {
+    let length = s.len(); // len() mengembalikan panjang sebuah String
+
+    (s, length)
+}</code></pre>
+      <p>
+        Tapi ini terlalu banyak seremoni dan kerja untuk konsep yang
+        seharusnya umum. Untungnya, Rust punya fitur untuk memakai sebuah
+        nilai tanpa memindahkan ownership-nya: referensi.
+      </p>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Tiga aturan ownership: setiap nilai punya satu owner, hanya satu owner dalam satu waktu, nilai di-drop saat owner-nya keluar dari scope.</li>
+          <li>Menetapkan nilai heap (seperti <code>String</code>) ke variabel lain melakukan <strong>move</strong> — variabel lama jadi tidak valid, mencegah double free.</li>
+          <li><code>.clone()</code> secara eksplisit melakukan deep copy data heap, kalau kamu memang butuh dua salinan independen.</li>
+          <li>Tipe yang seluruhnya di stack (integer, bool, float, char, tuple berisi tipe Copy) mengimplementasikan trait <code>Copy</code> — disalin, bukan di-move.</li>
+          <li>Mengoper nilai ke/dari fungsi mengikuti aturan move/copy yang sama seperti assignment biasa.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

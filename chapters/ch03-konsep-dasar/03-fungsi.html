@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.3 Fungsi — Belajar Rust</title>
+<meta name="description" content="Mendefinisikan fungsi, parameter, perbedaan statement vs ekspresi, dan fungsi dengan nilai kembalian di Rust.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch03-03">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 3: Konsep Pemrograman Dasar</nav>
+    <article>
+      <p class="chapter-label">Bab 3.3</p>
+      <h1>Fungsi</h1>
+
+      <p class="lead">
+        Fungsi ada di mana-mana dalam kode Rust. Kamu sudah melihat salah
+        satu fungsi terpenting di bahasa ini: fungsi <code>main</code>, yang
+        menjadi titik masuk banyak program. Kamu juga sudah melihat keyword
+        <code>fn</code>, yang dipakai untuk mendeklarasikan fungsi baru.
+      </p>
+      <p>
+        Kode Rust memakai <strong>snake case</strong> sebagai gaya
+        konvensional untuk nama fungsi dan variabel — semua huruf kecil,
+        dengan underscore memisahkan kata. Berikut program berisi contoh
+        definisi fungsi:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    println!("Hello, world!");
+
+    another_function();
+}
+
+fn another_function() {
+    println!("Fungsi lain.");
+}</code></pre>
+      <p>
+        Kita mendefinisikan fungsi di Rust dengan mengetik <code>fn</code>
+        diikuti nama fungsi dan sepasang tanda kurung. Kurung kurawal
+        memberi tahu compiler di mana badan fungsi dimulai dan berakhir.
+      </p>
+      <p>
+        Kita bisa memanggil fungsi apa pun yang sudah kita definisikan
+        dengan mengetik namanya diikuti sepasang tanda kurung. Karena
+        <code>another_function</code> didefinisikan dalam program ini, ia
+        bisa dipanggil dari dalam fungsi <code>main</code>. Perhatikan kita
+        mendefinisikan <code>another_function</code> <em>setelah</em> fungsi
+        <code>main</code> di source code-nya — kita juga bisa
+        mendefinisikannya sebelum <code>main</code>. Rust tidak peduli di
+        mana kamu mendefinisikan fungsimu, yang penting fungsi itu
+        didefinisikan di suatu scope yang bisa "dilihat" oleh pemanggilnya.
+      </p>
+      <p>
+        Mari mulai proyek binary baru bernama <code>functions</code> untuk
+        mengeksplorasi fungsi lebih jauh. Taruh contoh
+        <code>another_function</code> di <code>src/main.rs</code> dan
+        jalankan. Kamu akan melihat output:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling functions v0.1.0 (file:///projects/functions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.28s
+     Running `target/debug/functions`
+Hello, world!
+Fungsi lain.</code></pre>
+      <p>
+        Baris-baris dijalankan sesuai urutan kemunculannya dalam fungsi
+        <code>main</code>. Pertama pesan "Hello, world!" dicetak, lalu
+        <code>another_function</code> dipanggil dan pesannya dicetak.
+      </p>
+
+      <h2 id="parameter">Parameter</h2>
+      <p>
+        Kita bisa mendefinisikan fungsi supaya punya <strong>parameter</strong>
+        — variabel khusus yang menjadi bagian dari signature sebuah fungsi.
+        Ketika sebuah fungsi punya parameter, kamu bisa memberinya nilai
+        konkret untuk parameter tersebut. Secara teknis, nilai konkret itu
+        disebut <strong>argumen</strong>, tapi dalam percakapan sehari-hari,
+        orang cenderung memakai kata "parameter" dan "argumen" secara
+        bergantian, baik untuk variabel di definisi fungsi maupun nilai
+        konkret yang dioper saat memanggil fungsi.
+      </p>
+      <p>Di versi <code>another_function</code> ini kita tambahkan parameter:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    another_function(5);
+}
+
+fn another_function(x: i32) {
+    println!("Nilai x adalah: {x}");
+}</code></pre>
+      <p>Coba jalankan program ini; kamu akan mendapat output:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling functions v0.1.0 (file:///projects/functions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.21s
+     Running `target/debug/functions`
+Nilai x adalah: 5</code></pre>
+      <p>
+        Deklarasi <code>another_function</code> punya satu parameter bernama
+        <code>x</code>. Tipe <code>x</code> ditentukan sebagai <code>i32</code>.
+        Ketika kita mengoper <code>5</code> ke <code>another_function</code>,
+        macro <code>println!</code> menaruh <code>5</code> di posisi kurung
+        kurawal berisi <code>x</code> dalam string format-nya.
+      </p>
+      <p>
+        Di signature fungsi, kamu <strong>wajib</strong> mendeklarasikan
+        tipe setiap parameter. Ini keputusan desain yang disengaja di Rust:
+        mewajibkan anotasi tipe di definisi fungsi berarti compiler hampir
+        tidak pernah butuh kamu menuliskannya lagi di bagian lain kode untuk
+        mengetahui tipe apa yang kamu maksud. Compiler juga bisa memberi
+        pesan error yang lebih membantu kalau ia tahu tipe apa yang
+        diharapkan fungsi itu.
+      </p>
+      <p>Saat mendefinisikan banyak parameter, pisahkan deklarasinya dengan koma:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    print_labeled_measurement(5, 'h');
+}
+
+fn print_labeled_measurement(value: i32, unit_label: char) {
+    println!("Ukurannya adalah: {value}{unit_label}");
+}</code></pre>
+      <p>
+        Contoh ini membuat fungsi bernama <code>print_labeled_measurement</code>
+        dengan dua parameter. Parameter pertama bernama <code>value</code>
+        bertipe <code>i32</code>. Parameter kedua bernama
+        <code>unit_label</code> bertipe <code>char</code>. Fungsi ini lalu
+        mencetak teks berisi <code>value</code> dan <code>unit_label</code>.
+      </p>
+      <p>Mari jalankan kode ini dengan <code>cargo run</code>:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling functions v0.1.0 (file:///projects/functions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/functions`
+Ukurannya adalah: 5h</code></pre>
+      <p>
+        Karena kita memanggil fungsi ini dengan <code>5</code> sebagai nilai
+        untuk <code>value</code> dan <code>'h'</code> untuk
+        <code>unit_label</code>, output program berisi nilai-nilai itu.
+      </p>
+
+      <h2 id="statement-ekspresi">Statement dan Ekspresi</h2>
+      <p>
+        Badan fungsi tersusun dari serangkaian <strong>statement</strong>
+        yang secara opsional diakhiri dengan sebuah <strong>ekspresi</strong>.
+        Sejauh ini, fungsi yang kita bahas belum menyertakan ekspresi
+        penutup, tapi kamu sudah melihat ekspresi sebagai bagian dari sebuah
+        statement. Karena Rust adalah bahasa berbasis ekspresi, ini
+        perbedaan penting untuk dipahami. Bahasa lain tidak selalu punya
+        perbedaan yang sama, jadi mari kita lihat apa itu statement dan
+        ekspresi, dan bagaimana perbedaannya memengaruhi badan fungsi.
+      </p>
+      <ul>
+        <li><strong>Statement</strong> adalah instruksi yang melakukan sebuah aksi dan tidak mengembalikan nilai.</li>
+        <li><strong>Ekspresi</strong> dievaluasi menjadi sebuah nilai hasil.</li>
+      </ul>
+      <p>Mari lihat beberapa contoh.</p>
+      <p>
+        Sebenarnya kita sudah memakai statement dan ekspresi. Membuat
+        variabel dan memberinya nilai dengan keyword <code>let</code> adalah
+        statement. Di contoh berikut, <code>let y = 6;</code> adalah
+        statement.
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let y = 6;
+}</code></pre>
+      <p>
+        Definisi fungsi juga statement — seluruh contoh sebelumnya sendiri
+        adalah sebuah statement. (Seperti akan kita lihat sebentar lagi,
+        memanggil sebuah fungsi <em>bukan</em> statement.)
+      </p>
+      <p>
+        Statement tidak mengembalikan nilai. Karena itu, kamu tidak bisa
+        menetapkan sebuah statement <code>let</code> ke variabel lain,
+        seperti yang dicoba kode berikut — kamu akan mendapat error:
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let x = (let y = 6);
+}</code></pre>
+      <p>Ketika kamu jalankan program ini, error yang muncul terlihat seperti:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling functions v0.1.0 (file:///projects/functions)
+error: expected expression, found `let` statement
+ --> src/main.rs:2:14
+  |
+2 |     let x = (let y = 6);
+  |              ^^^
+  |
+  = note: only supported directly in conditions of `if` and `while` expressions
+
+warning: unnecessary parentheses around assigned value
+ --> src/main.rs:2:13
+  |
+2 |     let x = (let y = 6);
+  |             ^         ^
+  |
+  = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+
+warning: `functions` (bin "functions") generated 1 warning
+error: could not compile `functions` (bin "functions") due to 1 previous error; 1 warning emitted</code></pre>
+      <p>
+        Statement <code>let y = 6</code> tidak mengembalikan nilai, jadi
+        tidak ada apa pun untuk diikat oleh <code>x</code>. Ini berbeda dari
+        yang terjadi di bahasa lain seperti C dan Ruby, di mana
+        assignment mengembalikan nilai dari assignment itu sendiri. Di
+        bahasa-bahasa itu, kamu bisa menulis <code>x = y = 6</code> sehingga
+        <code>x</code> dan <code>y</code> sama-sama bernilai <code>6</code> —
+        itu tidak berlaku di Rust.
+      </p>
+      <p>
+        Ekspresi dievaluasi menjadi sebuah nilai, dan sebagian besar sisa
+        kode yang akan kamu tulis di Rust adalah ekspresi. Ambil contoh
+        operasi matematika seperti <code>5 + 6</code>, yang merupakan
+        ekspresi yang dievaluasi menjadi nilai <code>11</code>. Ekspresi
+        bisa menjadi bagian dari statement: di contoh sebelumnya, angka
+        <code>6</code> di statement <code>let y = 6;</code> adalah ekspresi
+        yang dievaluasi menjadi nilai <code>6</code>. Memanggil fungsi
+        adalah ekspresi. Memanggil macro adalah ekspresi. Blok scope baru
+        yang dibuat dengan kurung kurawal juga ekspresi, misalnya:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let y = {
+        let x = 3;
+        x + 1
+    };
+
+    println!("Nilai y adalah: {y}");
+}</code></pre>
+      <p>Ekspresi ini:</p>
+      <pre><code class="language-rust">{
+    let x = 3;
+    x + 1
+}</code></pre>
+      <p>
+        adalah sebuah blok yang, dalam kasus ini, dievaluasi menjadi
+        <code>4</code>. Nilai itu terikat ke <code>y</code> sebagai bagian
+        dari statement <code>let</code>. Perhatikan baris <code>x + 1</code>
+        tidak diakhiri titik koma, berbeda dari kebanyakan baris yang sudah
+        kamu lihat sejauh ini. Ekspresi tidak menyertakan titik koma
+        penutup. Kalau kamu menambahkan titik koma di akhir sebuah
+        ekspresi, kamu mengubahnya menjadi statement, dan ia tidak akan lagi
+        mengembalikan nilai. Ingat ini baik-baik saat kita membahas nilai
+        kembalian fungsi dan ekspresi berikutnya.
+      </p>
+
+      <h2 id="return">Fungsi dengan Nilai Kembalian</h2>
+      <p>
+        Fungsi bisa mengembalikan nilai ke kode yang memanggilnya. Kita
+        tidak memberi nama pada nilai kembalian, tapi kita harus
+        mendeklarasikan tipenya setelah tanda panah (<code>-&gt;</code>). Di
+        Rust, nilai kembalian sebuah fungsi identik dengan nilai dari
+        ekspresi terakhir di blok badan fungsi itu. Kamu bisa keluar lebih
+        awal dari sebuah fungsi memakai keyword <code>return</code> dan
+        menentukan sebuah nilai, tapi kebanyakan fungsi mengembalikan
+        ekspresi terakhirnya secara implisit. Berikut contoh fungsi yang
+        mengembalikan sebuah nilai:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn five() -> i32 {
+    5
+}
+
+fn main() {
+    let x = five();
+
+    println!("Nilai x adalah: {x}");
+}</code></pre>
+      <p>
+        Tidak ada pemanggilan fungsi, macro, atau bahkan statement
+        <code>let</code> di fungsi <code>five</code> — hanya angka
+        <code>5</code> sendirian. Itu fungsi yang sepenuhnya valid di Rust.
+        Perhatikan tipe kembalian fungsi ini juga ditentukan, sebagai
+        <code>-&gt; i32</code>. Coba jalankan kode ini; outputnya seharusnya:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling functions v0.1.0 (file:///projects/functions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.30s
+     Running `target/debug/functions`
+Nilai x adalah: 5</code></pre>
+      <p>
+        Angka <code>5</code> di fungsi <code>five</code> adalah nilai
+        kembalian fungsi itu, itulah kenapa tipe kembaliannya <code>i32</code>.
+        Mari periksa lebih detail. Ada dua hal penting: pertama, baris
+        <code>let x = five();</code> menunjukkan kita memakai nilai
+        kembalian sebuah fungsi untuk menginisialisasi sebuah variabel.
+        Karena fungsi <code>five</code> mengembalikan <code>5</code>, baris
+        itu sama saja dengan:
+      </p>
+      <pre><code class="language-rust">let x = 5;</code></pre>
+      <p>
+        Kedua, fungsi <code>five</code> tidak punya parameter dan
+        mendefinisikan tipe nilai kembaliannya, tapi badan fungsinya cuma
+        angka <code>5</code> sendirian tanpa titik koma karena itu adalah
+        ekspresi yang nilainya ingin kita kembalikan.
+      </p>
+      <p>Mari lihat contoh lain:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let x = plus_one(5);
+
+    println!("Nilai x adalah: {x}");
+}
+
+fn plus_one(x: i32) -> i32 {
+    x + 1
+}</code></pre>
+      <p>
+        Menjalankan kode ini akan mencetak <code>Nilai x adalah: 6</code>.
+        Tapi apa yang terjadi kalau kita taruh titik koma di akhir baris
+        berisi <code>x + 1</code>, mengubahnya dari ekspresi menjadi
+        statement?
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let x = plus_one(5);
+
+    println!("Nilai x adalah: {x}");
+}
+
+fn plus_one(x: i32) -> i32 {
+    x + 1;
+}</code></pre>
+      <p>Mengompilasi kode ini akan menghasilkan error:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling functions v0.1.0 (file:///projects/functions)
+error[E0308]: mismatched types
+ --> src/main.rs:7:24
+  |
+7 | fn plus_one(x: i32) -> i32 {
+  |    --------            ^^^ expected `i32`, found `()`
+  |    |
+  |    implicitly returns `()` as its body has no tail or `return` expression
+8 |     x + 1;
+  |          - help: remove this semicolon to return this value
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `functions` (bin "functions") due to 1 previous error</code></pre>
+      <p>
+        Pesan error utama, <code>mismatched types</code>, mengungkap inti
+        masalah kode ini. Definisi fungsi <code>plus_one</code> mengatakan
+        ia akan mengembalikan <code>i32</code>, tapi statement tidak
+        dievaluasi menjadi nilai apa pun, yang diekspresikan dengan
+        <code>()</code>, tipe unit. Karena itu, tidak ada yang dikembalikan,
+        yang bertentangan dengan definisi fungsinya dan menghasilkan error.
+        Di output ini, Rust memberi pesan yang mungkin membantu memperbaiki
+        masalah ini: ia menyarankan menghapus titik koma, yang akan
+        memperbaiki errornya.
+      </p>
+
+      <div class="quiz">
+        <p class="quiz-question">Fungsi berikut punya bug. Apa yang salah?<br><code>fn tambah_satu(x: i32) -> i32 { x + 1; }</code></p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Parameter x sudah otomatis bertipe i32 dari signature-nya — tidak butuh anotasi tambahan di badan fungsi.">Parameter x butuh anotasi tipe tambahan di badan fungsi</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. Titik koma mengubah x + 1 dari ekspresi (yang bernilai) menjadi statement (yang bernilai unit ()). Fungsi ini butuh nilai i32 sebagai hasil akhirnya, jadi terjadi mismatched types.">Titik koma setelah x + 1 mengubahnya jadi statement, sehingga fungsi ini diam-diam mengembalikan () alih-alih i32</button>
+          <button class="quiz-option" data-explain="Nama fungsi boleh apa saja selama valid sebagai identifier snake_case — itu bukan masalahnya di sini.">Nama fungsinya tidak boleh mengandung underscore</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Fungsi didefinisikan dengan <code>fn</code>, nama snake_case, dan tipe setiap parameter wajib dianotasi.</li>
+          <li>Statement tidak mengembalikan nilai; ekspresi mengembalikan nilai. Blok <code>{ }</code> juga ekspresi.</li>
+          <li>Nilai kembalian fungsi = nilai ekspresi terakhir di badannya (tanpa titik koma), atau lewat <code>return</code> eksplisit.</li>
+          <li>Menambahkan titik koma ke ekspresi terakhir mengubahnya jadi statement bernilai <code>()</code> — penyebab umum error <em>mismatched types</em>.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

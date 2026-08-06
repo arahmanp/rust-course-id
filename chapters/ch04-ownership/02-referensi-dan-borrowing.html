@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4.2 Referensi dan Borrowing — Belajar Rust</title>
+<meta name="description" content="Cara memakai nilai tanpa mengambil ownership-nya lewat referensi, aturan mutable/immutable borrowing, dan dangling reference.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch04-02">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 4: Memahami Ownership</nav>
+    <article>
+      <p class="chapter-label">Bab 4.2</p>
+      <h1>Referensi dan Borrowing</h1>
+
+      <p class="lead">
+        Masalah dengan kode tuple di subbab sebelumnya adalah kita harus
+        mengembalikan <code>String</code> ke fungsi pemanggil supaya kita
+        masih bisa memakai <code>String</code> itu setelah pemanggilan
+        <code>calculate_length</code>, karena <code>String</code>-nya
+        di-move ke <code>calculate_length</code>. Sebagai gantinya, kita
+        bisa menyediakan sebuah <strong>referensi</strong> ke nilai
+        <code>String</code> itu. Referensi mirip pointer, dalam artian ia
+        adalah sebuah alamat yang bisa kita ikuti untuk mengakses data yang
+        disimpan di alamat itu; data itu dimiliki oleh variabel lain.
+        Berbeda dari pointer, sebuah referensi dijamin selalu menunjuk ke
+        nilai valid bertipe tertentu selama masa hidup referensi itu.
+      </p>
+      <p>
+        Berikut cara mendefinisikan dan memakai fungsi
+        <code>calculate_length</code> yang menerima referensi ke sebuah
+        objek sebagai parameter, alih-alih mengambil ownership nilainya:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let s1 = String::from("hello");
+
+    let len = calculate_length(&s1);
+
+    println!("Panjang dari '{s1}' adalah {len}.");
+}
+
+fn calculate_length(s: &String) -> usize {
+    s.len()
+}</code></pre>
+      <p>
+        Pertama, perhatikan semua kode tuple di deklarasi variabel dan
+        nilai kembalian fungsinya sudah hilang. Kedua, perhatikan kita
+        mengoper <code>&amp;s1</code> ke <code>calculate_length</code>, dan
+        di definisinya, kita menerima <code>&amp;String</code> alih-alih
+        <code>String</code>. Tanda ampersand ini merepresentasikan
+        referensi, dan mereka memungkinkanmu merujuk ke sebuah nilai tanpa
+        mengambil ownership-nya.
+      </p>
+      <figure class="diagram">
+        <img src="../../assets/img/trpl04-06.svg" alt="Diagram s (parameter fungsi bertipe &String) di stack, hanya menyimpan pointer ke s1, yang barulah menunjuk ke data string di heap.">
+        <figcaption>Gambar 4-6: Diagram &String s yang menunjuk ke String s1</figcaption>
+      </figure>
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Dereferencing</p>
+        <p>
+          Kebalikan dari mereferensikan lewat <code>&amp;</code> adalah
+          <em>dereferencing</em>, dilakukan dengan operator dereference,
+          <code>*</code>. Kita akan lihat beberapa pemakaian operator
+          dereference di Bab 8 dan membahas detailnya di Bab 15.
+        </p>
+      </div>
+      <p>Mari lihat lebih dekat pemanggilan fungsi ini:</p>
+      <pre><code class="language-rust">let s1 = String::from("hello");
+
+let len = calculate_length(&s1);</code></pre>
+      <p>
+        Sintaks <code>&amp;s1</code> memungkinkan kita membuat sebuah
+        referensi yang <em>merujuk</em> ke nilai <code>s1</code> tapi tidak
+        memilikinya. Karena referensi itu tidak memilikinya, nilai yang
+        ditunjuknya tidak akan di-drop ketika referensinya berhenti
+        dipakai.
+      </p>
+      <p>
+        Begitu juga, signature fungsinya memakai <code>&amp;</code> untuk
+        menandakan bahwa tipe parameter <code>s</code> adalah sebuah
+        referensi. Mari tambahkan beberapa anotasi penjelas:
+      </p>
+      <pre><code class="language-rust">fn calculate_length(s: &String) -> usize { // s adalah referensi ke sebuah String
+    s.len()
+} // Di sini, s keluar dari scope. Tapi karena s tidak memiliki apa yang
+  // ditunjuknya, String-nya tidak di-drop.</code></pre>
+      <p>
+        Scope tempat variabel <code>s</code> valid sama seperti scope
+        parameter fungsi mana pun, tapi nilai yang ditunjuk referensinya
+        tidak di-drop ketika <code>s</code> berhenti dipakai, karena
+        <code>s</code> tidak punya ownership. Ketika fungsi punya referensi
+        sebagai parameter alih-alih nilai sesungguhnya, kita tidak perlu
+        mengembalikan nilainya untuk mengembalikan ownership, karena kita
+        memang tidak pernah punya ownership-nya.
+      </p>
+      <p>
+        Kita menyebut aksi membuat sebuah referensi sebagai
+        <strong>borrowing</strong> (meminjam). Seperti dalam kehidupan
+        nyata, kalau seseorang memiliki sesuatu, kamu bisa meminjamnya dari
+        mereka. Ketika selesai, kamu harus mengembalikannya. Kamu tidak
+        memilikinya.
+      </p>
+      <p>
+        Jadi, apa yang terjadi kalau kita coba mengubah sesuatu yang sedang
+        kita pinjam? Coba kode berikut. Spoiler: tidak akan bekerja!
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let s = String::from("hello");
+
+    change(&s);
+}
+
+fn change(some_string: &String) {
+    some_string.push_str(", world");
+}</code></pre>
+      <p>Berikut errornya:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0596]: cannot borrow `*some_string` as mutable, as it is behind a `&` reference
+ --> src/main.rs:8:5
+  |
+8 |     some_string.push_str(", world");
+  |     ^^^^^^^^^^^ `some_string` is a `&` reference, so it cannot be borrowed as mutable
+  |
+help: consider changing this to be a mutable reference
+  |
+7 | fn change(some_string: &mut String) {
+  |                         +++
+
+For more information about this error, try `rustc --explain E0596`.
+error: could not compile `ownership` (bin "ownership") due to 1 previous error</code></pre>
+      <p>
+        Sama seperti variabel yang immutable secara default, begitu juga
+        referensi. Kita tidak diizinkan mengubah sesuatu yang kita punya
+        referensinya (kecuali referensinya mutable).
+      </p>
+
+      <h2 id="mutable-reference">Mutable Reference</h2>
+      <p>
+        Kita bisa memperbaiki kode sebelumnya supaya mengizinkan kita
+        mengubah nilai yang dipinjam, dengan sedikit perubahan yang
+        memakai <strong>mutable reference</strong>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let mut s = String::from("hello");
+
+    change(&mut s);
+}
+
+fn change(some_string: &mut String) {
+    some_string.push_str(", world");
+}</code></pre>
+      <p>
+        Pertama, kita ubah <code>s</code> menjadi <code>mut</code>. Lalu,
+        kita buat mutable reference dengan <code>&amp;mut s</code> saat
+        memanggil fungsi <code>change</code>, dan update signature
+        fungsinya menerima mutable reference dengan
+        <code>some_string: &amp;mut String</code>. Ini membuat sangat jelas
+        bahwa fungsi <code>change</code> akan mengubah nilai yang
+        dipinjamnya.
+      </p>
+      <p>
+        Mutable reference punya satu pembatasan besar: kalau kamu punya
+        mutable reference ke sebuah nilai, kamu tidak boleh punya referensi
+        lain ke nilai itu. Kode berikut yang mencoba membuat dua mutable
+        reference ke <code>s</code> akan gagal:
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">let mut s = String::from("hello");
+
+let r1 = &mut s;
+let r2 = &mut s;
+
+println!("{r1}, {r2}");</code></pre>
+      <p>Berikut errornya:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0499]: cannot borrow `s` as mutable more than once at a time
+ --> src/main.rs:5:14
+  |
+4 |     let r1 = &mut s;
+  |              ------ first mutable borrow occurs here
+5 |     let r2 = &mut s;
+  |              ^^^^^^ second mutable borrow occurs here
+6 |
+7 |     println!("{r1}, {r2}");
+  |                -- first borrow later used here
+
+For more information about this error, try `rustc --explain E0499`.
+error: could not compile `ownership` (bin "ownership") due to 1 previous error</code></pre>
+      <p>
+        Error ini bilang kode ini tidak valid karena kita tidak bisa
+        meminjam <code>s</code> sebagai mutable lebih dari sekali dalam
+        satu waktu. Mutable borrow pertama ada di <code>r1</code> dan harus
+        bertahan sampai ia dipakai di <code>println!</code>, tapi di antara
+        pembuatan mutable reference itu dan pemakaiannya, kita mencoba
+        membuat mutable reference lain di <code>r2</code> yang meminjam
+        data yang sama dengan <code>r1</code>.
+      </p>
+      <p>
+        Pembatasan yang mencegah banyak mutable reference ke data yang sama
+        dalam satu waktu mengizinkan mutasi, tapi dengan cara yang sangat
+        terkontrol. Ini sesuatu yang sering membuat Rustacean baru
+        kesulitan, karena kebanyakan bahasa mengizinkanmu mengubah kapan
+        pun kamu mau. Keuntungan dari pembatasan ini: Rust bisa mencegah
+        <em>data race</em> saat compile-time. Sebuah <strong>data race</strong>
+        mirip dengan race condition dan terjadi ketika tiga perilaku ini
+        muncul:
+      </p>
+      <ul>
+        <li>Dua atau lebih pointer mengakses data yang sama pada saat bersamaan.</li>
+        <li>Setidaknya satu dari pointer itu dipakai untuk menulis ke data itu.</li>
+        <li>Tidak ada mekanisme yang dipakai untuk menyinkronkan akses ke data itu.</li>
+      </ul>
+      <p>
+        Data race menyebabkan <em>undefined behavior</em> dan bisa sulit
+        didiagnosis serta diperbaiki ketika kamu mencoba melacaknya saat
+        runtime; Rust mencegah masalah ini dengan menolak mengompilasi
+        kode yang mengandung data race!
+      </p>
+      <p>
+        Seperti biasa, kita bisa memakai kurung kurawal untuk membuat scope
+        baru, yang memungkinkan banyak mutable reference — hanya saja tidak
+        <em>bersamaan</em>:
+      </p>
+      <pre><code class="language-rust">let mut s = String::from("hello");
+
+{
+    let r1 = &mut s;
+} // r1 keluar dari scope di sini, jadi kita bisa membuat referensi baru tanpa masalah.
+
+let r2 = &mut s;</code></pre>
+      <p>
+        Rust menerapkan aturan serupa untuk menggabungkan mutable dan
+        immutable reference. Kode berikut menghasilkan error:
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <pre><code class="language-rust">let mut s = String::from("hello");
+
+let r1 = &s; // tidak masalah
+let r2 = &s; // tidak masalah
+let r3 = &mut s; // MASALAH BESAR
+
+println!("{r1}, {r2}, and {r3}");</code></pre>
+      <p>Berikut errornya:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0502]: cannot borrow `s` as mutable because it is also borrowed as immutable
+ --> src/main.rs:6:14
+  |
+4 |     let r1 = &s; // no problem
+  |              -- immutable borrow occurs here
+5 |     let r2 = &s; // no problem
+6 |     let r3 = &mut s; // BIG PROBLEM
+  |              ^^^^^^ mutable borrow occurs here
+7 |
+8 |     println!("{r1}, {r2}, and {r3}");
+  |                -- immutable borrow later used here
+
+For more information about this error, try `rustc --explain E0502`.
+error: could not compile `ownership` (bin "ownership") due to 1 previous error</code></pre>
+      <p>
+        Fiuh! Kita <strong>juga</strong> tidak bisa punya mutable reference
+        selagi kita punya immutable reference ke nilai yang sama.
+      </p>
+      <p>
+        Pengguna sebuah immutable reference tidak berharap nilainya
+        tiba-tiba berubah begitu saja! Tapi, banyak immutable reference
+        diizinkan karena tidak ada satu pun yang sekadar membaca data itu
+        bisa memengaruhi pembacaan orang lain terhadap data yang sama.
+      </p>
+      <p>
+        Ingat, scope sebuah referensi dimulai dari titik ia diperkenalkan
+        dan berlanjut sampai terakhir kali referensi itu dipakai. Misalnya,
+        kode berikut akan berhasil dikompilasi karena pemakaian terakhir
+        immutable reference-nya ada di <code>println!</code>, sebelum
+        mutable reference-nya diperkenalkan:
+      </p>
+      <pre><code class="language-rust">let mut s = String::from("hello");
+
+let r1 = &s; // tidak masalah
+let r2 = &s; // tidak masalah
+println!("{r1} and {r2}");
+// Variabel r1 dan r2 tidak akan dipakai lagi setelah titik ini.
+
+let r3 = &mut s; // tidak masalah
+println!("{r3}");</code></pre>
+      <p>
+        Scope immutable reference <code>r1</code> dan <code>r2</code>
+        berakhir setelah <code>println!</code> tempat mereka terakhir
+        dipakai, yaitu sebelum mutable reference <code>r3</code> dibuat.
+        Scope-scope ini tidak tumpang tindih, jadi kode ini diizinkan:
+        compiler bisa tahu bahwa referensinya sudah tidak dipakai lagi di
+        titik sebelum akhir scope-nya.
+      </p>
+      <p>
+        Walaupun error borrowing kadang menjengkelkan, ingat bahwa itu
+        compiler Rust menunjukkan potensi bug lebih awal (saat
+        compile-time, bukan runtime) dan menunjukkan persis di mana
+        masalahnya. Jadi, kamu tidak perlu melacak kenapa datamu bukan
+        seperti yang kamu kira.
+      </p>
+
+      <div class="quiz">
+        <p class="quiz-question">Kenapa Rust melarang mutable reference dan immutable reference aktif secara bersamaan ke data yang sama?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Justru sebaliknya — aturan ini adalah tentang MENCEGAH data race, bukan mempercepat compile.">Supaya proses kompilasi lebih cepat</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. Kalau reader (immutable reference) dan writer (mutable reference) bisa aktif bersamaan ke data yang sama tanpa sinkronisasi, itulah definisi data race — sumber bug yang sangat sulit dilacak di bahasa lain. Rust mencegahnya di compile-time." >Supaya tidak terjadi data race — pembaca (immutable reference) tidak akan pernah melihat data berubah tiba-tiba akibat penulis (mutable reference) yang aktif bersamaan</button>
+          <button class="quiz-option" data-explain="Aturan ini tidak ada hubungannya dengan ukuran biner hasil kompilasi.">Supaya ukuran file executable-nya lebih kecil</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <h2 id="dangling">Dangling Reference</h2>
+      <p>
+        Di bahasa dengan pointer, sangat mudah keliru membuat
+        <strong>dangling pointer</strong> — pointer yang merujuk ke lokasi
+        memori yang mungkin sudah diberikan ke pihak lain — dengan
+        membebaskan sebagian memori sambil tetap menyimpan pointer ke
+        memori itu. Di Rust, sebaliknya, compiler menjamin referensi tidak
+        akan pernah menjadi dangling reference: kalau kamu punya referensi
+        ke suatu data, compiler akan memastikan data itu tidak akan keluar
+        dari scope sebelum referensinya keluar dari scope.
+      </p>
+      <p>Mari coba membuat dangling reference untuk melihat bagaimana Rust mencegahnya dengan error compile-time:</p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let reference_to_nothing = dangle();
+}
+
+fn dangle() -> &String {
+    let s = String::from("hello");
+
+    &s
+}</code></pre>
+      <p>Berikut errornya:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling ownership v0.1.0 (file:///projects/ownership)
+error[E0106]: missing lifetime specifier
+ --> src/main.rs:5:16
+  |
+5 | fn dangle() -> &String {
+  |                ^ expected named lifetime parameter
+  |
+  = help: this function's return type contains a borrowed value, but there is no value for it to be borrowed from
+help: consider using the `'static` lifetime, but this is uncommon unless you're returning a borrowed value from a `const` or a `static`
+  |
+5 | fn dangle() -> &'static String {
+  |                 +++++++
+help: instead, you are more likely to want to return an owned value
+  |
+5 - fn dangle() -> &String {
+5 + fn dangle() -> String {
+  |
+
+For more information about this error, try `rustc --explain E0106`.
+error: could not compile `ownership` (bin "ownership") due to 1 previous error</code></pre>
+      <p>
+        Pesan error ini merujuk ke fitur yang belum kita bahas: lifetime.
+        Kita akan bahas lifetime detail di Bab 10. Tapi, kalau kamu
+        abaikan bagian tentang lifetime-nya, pesan ini sebenarnya sudah
+        berisi kunci kenapa kode ini bermasalah:
+      </p>
+      <pre><code class="language-text">this function's return type contains a borrowed value, but there is no value
+for it to be borrowed from</code></pre>
+      <p>Mari lihat lebih dekat apa yang sebenarnya terjadi di setiap tahap kode <code>dangle</code> kita:</p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn dangle() -> &String { // dangle mengembalikan sebuah referensi ke String
+
+    let s = String::from("hello"); // s adalah String baru
+
+    &s // kita mengembalikan sebuah referensi ke String, s
+} // Di sini, s keluar dari scope dan di-drop, jadi memorinya hilang.
+  // Bahaya!</code></pre>
+      <p>
+        Karena <code>s</code> dibuat di dalam <code>dangle</code>, ketika
+        kode <code>dangle</code> selesai, <code>s</code> akan
+        didealokasikan. Tapi kita mencoba mengembalikan referensi ke
+        situ. Itu berarti referensi ini akan menunjuk ke <code>String</code>
+        yang tidak valid. Itu tidak baik! Rust tidak akan mengizinkan kita
+        melakukan ini.
+      </p>
+      <p>Solusinya di sini adalah mengembalikan <code>String</code> secara langsung:</p>
+      <pre><code class="language-rust">fn no_dangle() -> String {
+    let s = String::from("hello");
+
+    s
+}</code></pre>
+      <p>
+        Ini bekerja tanpa masalah apa pun. Ownership-nya dipindahkan ke
+        luar, dan tidak ada yang didealokasikan.
+      </p>
+
+      <h2 id="aturan-referensi">Aturan Referensi</h2>
+      <p>Mari kita rekap apa yang sudah kita bahas tentang referensi:</p>
+      <ul>
+        <li>Dalam satu waktu, kamu bisa punya <strong>salah satu</strong> dari: satu mutable reference, <strong>atau</strong> sejumlah berapa pun immutable reference.</li>
+        <li>Referensi harus selalu valid.</li>
+      </ul>
+      <p>Selanjutnya, kita akan lihat jenis referensi lain: slice.</p>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Referensi (<code>&amp;</code>) memungkinkan sebuah fungsi memakai nilai tanpa mengambil ownership-nya — disebut <strong>borrowing</strong>.</li>
+          <li>Referensi immutable secara default; pakai <code>&amp;mut</code> untuk membuatnya bisa mengubah nilai yang dipinjam.</li>
+          <li>Aturan borrowing: boleh punya banyak immutable reference SEKALIGUS, ATAU tepat satu mutable reference — tidak pernah keduanya bersamaan. Ini mencegah data race di compile-time.</li>
+          <li>Scope sebuah referensi berakhir di titik terakhir kali ia dipakai (Non-Lexical Lifetimes), bukan selalu di akhir blok kode.</li>
+          <li>Compiler mencegah dangling reference: sebuah referensi tidak akan pernah bisa hidup lebih lama dari data yang ditunjuknya.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

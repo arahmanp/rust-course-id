@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.2 Hello, World! — Belajar Rust</title>
+<meta name="description" content="Menulis, mengompilasi, dan menjalankan program Rust pertamamu, lalu membedah setiap barisnya.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch01-02">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 1: Memulai</nav>
+    <article>
+      <p class="chapter-label">Bab 1.2</p>
+      <h1>Hello, World!</h1>
+
+      <p class="lead">
+        Sekarang Rust sudah terinstal, saatnya menulis program Rust pertamamu.
+        Sudah jadi tradisi ketika belajar bahasa baru untuk menulis program
+        kecil yang menampilkan teks <code>Hello, world!</code> ke layar — jadi
+        mari kita lakukan hal yang sama.
+      </p>
+
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Familiar dengan command line?</p>
+        <p>
+          Kursus ini mengasumsikan kamu setidaknya cukup familiar dengan
+          command line. Rust sendiri tidak menuntut editor atau tooling
+          tertentu — kalau kamu lebih suka pakai IDE daripada command line
+          murni, silakan. Banyak IDE modern sudah punya dukungan Rust yang baik
+          lewat <code>rust-analyzer</code>.
+        </p>
+      </div>
+
+      <h2 id="setup-folder">Menyiapkan Folder Proyek</h2>
+      <p>
+        Buat folder untuk menyimpan kode Rust-mu. Rust tidak peduli di mana
+        kodemu berada, tapi untuk latihan di kursus ini, kita sarankan membuat
+        folder <code>projects</code> di home directory-mu dan menyimpan semua
+        proyek di sana.
+      </p>
+      <p>Buka terminal dan jalankan (Linux, macOS, atau PowerShell di Windows):</p>
+      <pre><code class="language-shell">$ mkdir ~/projects
+$ cd ~/projects
+$ mkdir hello_world
+$ cd hello_world</code></pre>
+      <p>Kalau kamu pakai Windows CMD:</p>
+      <pre><code class="language-shell">&gt; mkdir "%USERPROFILE%\projects"
+&gt; cd /d "%USERPROFILE%\projects"
+&gt; mkdir hello_world
+&gt; cd hello_world</code></pre>
+
+      <h2 id="menulis-program">Menulis dan Menjalankan Program Rust</h2>
+      <p>
+        Buat file baru bernama <code>main.rs</code>. File Rust selalu berakhiran
+        <code>.rs</code>. Kalau nama filemu terdiri lebih dari satu kata,
+        konvensinya memakai underscore, misalnya <code>hello_world.rs</code>,
+        bukan <code>helloworld.rs</code>.
+      </p>
+      <p>Buka <code>main.rs</code> dan tulis kode berikut:</p>
+      <p class="filename-label">Nama berkas: main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    println!("Hello, world!");
+}</code></pre>
+      <p>
+        Simpan file itu, lalu kembali ke terminal di folder
+        <code>~/projects/hello_world</code>. Di Linux atau macOS, kompilasi dan
+        jalankan filenya dengan:
+      </p>
+      <pre><code class="language-shell">$ rustc main.rs
+$ ./main
+Hello, world!</code></pre>
+      <p>Di Windows, jalankan <code>.\main</code> alih-alih <code>./main</code>:</p>
+      <pre><code class="language-shell">&gt; rustc main.rs
+&gt; .\main
+Hello, world!</code></pre>
+      <p>
+        Apa pun sistem operasimu, teks <code>Hello, world!</code> seharusnya
+        muncul di terminal. Kalau tidak muncul, kembali ke bagian
+        <a href="01-instalasi.html#troubleshooting">"Memastikan Instalasi Berhasil"</a>
+        di subbab sebelumnya.
+      </p>
+      <p>
+        Kalau <code>Hello, world!</code> berhasil muncul — selamat! Kamu baru
+        saja resmi menulis program Rust pertamamu. Itu artinya kamu sekarang
+        seorang programmer Rust. Selamat datang! 🎉
+      </p>
+
+      <h2 id="anatomi">Anatomi Sebuah Program Rust</h2>
+      <p>Mari kita bedah program "Hello, world!" ini baris demi baris. Bagian pertama:</p>
+      <pre><code class="language-rust">fn main() {
+
+}</code></pre>
+      <p>
+        Baris ini mendefinisikan sebuah fungsi bernama <code>main</code>.
+        Fungsi <code>main</code> itu istimewa: fungsi ini selalu menjadi kode
+        pertama yang dijalankan di setiap program Rust yang bisa dieksekusi.
+        Di sini, baris pertama mendeklarasikan fungsi <code>main</code> tanpa
+        parameter dan tidak mengembalikan apa pun. Kalau ada parameter, mereka
+        akan diletakkan di dalam tanda kurung <code>()</code>.
+      </p>
+      <p>
+        Badan fungsi dibungkus dengan <code>{}</code>. Rust mewajibkan kurung
+        kurawal di sekitar seluruh badan fungsi. Kebiasaan gaya penulisan yang
+        baik: letakkan kurung kurawal pembuka di baris yang sama dengan
+        deklarasi fungsi, dengan satu spasi di antaranya.
+      </p>
+
+      <div class="callout callout-tip">
+        <p class="callout-title">💡 rustfmt: biar kode selalu rapi</p>
+        <p>
+          Kalau kamu ingin gaya penulisan kode yang konsisten di semua proyek
+          Rust, kamu bisa memakai <code>rustfmt</code> — alat formatter
+          otomatis bawaan Rust. Sudah terinstal otomatis bersama Rust, jadi
+          kamu tinggal memakainya.
+        </p>
+      </div>
+
+      <p>Badan fungsi <code>main</code> berisi kode berikut:</p>
+      <pre><code class="language-rust">println!("Hello, world!");</code></pre>
+      <p>
+        Baris inilah yang melakukan seluruh pekerjaan program kecil ini: ia
+        mencetak teks ke layar. Ada tiga detail penting yang perlu diperhatikan:
+      </p>
+      <ol>
+        <li>
+          <strong><code>println!</code> memanggil sebuah macro Rust.</strong>
+          Kalau ia memanggil fungsi biasa, penulisannya akan menjadi
+          <code>println</code> (tanpa tanda seru). Macro adalah cara menulis
+          kode yang menghasilkan kode lain untuk memperluas sintaks Rust — akan
+          dibahas mendalam di Bab 20. Untuk sekarang, cukup ingat: tanda
+          <code>!</code> berarti kamu memanggil macro, bukan fungsi biasa, dan
+          macro tidak selalu mengikuti aturan yang sama seperti fungsi.
+        </li>
+        <li>
+          <strong>String <code>"Hello, world!"</code></strong> — kita
+          mengoper string ini sebagai argumen ke <code>println!</code>, dan
+          string itulah yang dicetak ke layar.
+        </li>
+        <li>
+          <strong>Titik koma <code>;</code> di akhir baris</strong> menandakan
+          bahwa ekspresi ini selesai dan ekspresi berikutnya siap dimulai.
+          Sebagian besar baris kode Rust diakhiri titik koma.
+        </li>
+      </ol>
+
+      <h2 id="kompilasi-eksekusi">Kompilasi dan Eksekusi Adalah Dua Langkah Terpisah</h2>
+      <p>
+        Kamu baru saja menjalankan program yang baru dibuat, jadi mari kita
+        telaah tiap langkahnya.
+      </p>
+      <p>
+        Sebelum dijalankan, program Rust harus dikompilasi lebih dulu memakai
+        compiler Rust, dengan memanggil perintah <code>rustc</code> dan
+        memberi nama file sumbernya:
+      </p>
+      <pre><code class="language-shell">$ rustc main.rs</code></pre>
+      <p>
+        Kalau kamu berlatar belakang C atau C++, ini mirip <code>gcc</code>
+        atau <code>clang</code>. Setelah berhasil dikompilasi, Rust
+        menghasilkan sebuah file binary yang bisa dieksekusi.
+      </p>
+      <p>Di Linux, macOS, dan PowerShell Windows, kamu bisa melihat file executable-nya dengan <code>ls</code>:</p>
+      <pre><code class="language-shell">$ ls
+main  main.rs</code></pre>
+      <p>Dengan CMD di Windows, hasilnya sedikit berbeda:</p>
+      <pre><code class="language-text">&gt; dir /B
+main.exe
+main.pdb
+main.rs</code></pre>
+      <p>
+        Terlihat file source code (<code>.rs</code>), file executable
+        (<code>main.exe</code> di Windows, atau <code>main</code> di sistem
+        lain), dan — khusus Windows — satu file berisi informasi debugging
+        berekstensi <code>.pdb</code>. Dari sini kamu tinggal menjalankan file
+        <code>main</code> atau <code>main.exe</code> tersebut.
+      </p>
+
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Kalau kamu terbiasa dengan bahasa dinamis</p>
+        <p>
+          Kalau kamu lebih familiar dengan bahasa seperti Ruby, Python, atau
+          JavaScript, kamu mungkin belum terbiasa mengompilasi dan menjalankan
+          program sebagai dua langkah terpisah. Rust adalah bahasa
+          <em>ahead-of-time compiled</em>: kamu bisa mengompilasi sebuah
+          program lalu memberikan file executable-nya ke orang lain, dan
+          mereka bisa menjalankannya <strong>tanpa perlu menginstal Rust sama
+          sekali</strong>. Kalau kamu memberi orang lain file <code>.rb</code>,
+          <code>.py</code>, atau <code>.js</code>, mereka tetap butuh Ruby,
+          Python, atau JavaScript terpasang di sistem mereka. Setiap desain
+          bahasa selalu punya trade-off masing-masing.
+        </p>
+      </div>
+
+      <p>
+        Memakai <code>rustc</code> langsung sudah cukup untuk program
+        sederhana, tapi begitu proyekmu bertambah besar, kamu akan butuh cara
+        mengelola opsi kompilasi dan membagikan kodemu dengan lebih mudah.
+        Selanjutnya kita akan berkenalan dengan Cargo — tool yang akan
+        membantumu menulis program Rust dunia nyata.
+      </p>
+
+      <div class="quiz">
+        <p class="quiz-question">Apa yang membedakan pemanggilan macro dari pemanggilan fungsi biasa di Rust?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-correct="true" data-explain="Tepat! println! adalah macro. Kalau ia fungsi biasa, ditulis println() tanpa tanda seru.">Ada tanda seru (!) setelah namanya, misalnya println!</button>
+          <button class="quiz-option" data-explain="Huruf kapital tidak ada hubungannya dengan macro vs fungsi di Rust.">Namanya harus diawali huruf kapital</button>
+          <button class="quiz-option" data-explain="Macro justru sering ditulis tanpa parameter di dalam kurung, seperti panic!() atau vec![].">Argumennya tidak boleh diapit kurung</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Fungsi <code>main</code> selalu jadi titik masuk pertama program Rust.</li>
+          <li><code>println!</code> adalah macro (ditandai <code>!</code>), bukan fungsi biasa.</li>
+          <li>Sebagian besar baris kode Rust diakhiri titik koma <code>;</code>.</li>
+          <li><code>rustc namafile.rs</code> mengompilasi kode menjadi file executable terpisah — kompilasi dan eksekusi adalah dua langkah yang berbeda.</li>
+          <li>Rust adalah bahasa <em>ahead-of-time compiled</em>: hasil kompilasinya bisa dijalankan tanpa Rust terpasang.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

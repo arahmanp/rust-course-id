@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belajar Rust — Kursus Bahasa Indonesia dari The Rust Programming Language</title>
+<meta name="description" content="Kursus pemrograman Rust berbahasa Indonesia yang ramah pemula, diadaptasi dari buku resmi The Rust Programming Language tanpa mengurangi kedalaman teknisnya.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"><!-- diisi otomatis oleh main.js dari chapters-data.js --></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content">
+    <section class="hero">
+      <h1>🦀 Belajar Rust dari Nol, dengan Bahasa Indonesia</h1>
+      <p>
+        Kursus ini mengadaptasi buku resmi
+        <strong>The Rust Programming Language</strong> menjadi materi yang ramah
+        pemula, lengkap dengan analogi, latihan interaktif, dan penjelasan
+        bertahap — tanpa memangkas kedalaman teknis yang membuat buku aslinya
+        begitu dihormati komunitas Rust.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="chapters/ch01-memulai/01-instalasi.html">Mulai Belajar →</a>
+        <a class="btn btn-ghost" href="#roadmap">Lihat Daftar Isi</a>
+      </div>
+    </section>
+
+    <div class="home-progress">
+      <p id="home-progress-text">Mulai belajar untuk melihat progresmu di sini.</p>
+      <div class="header-progress"><div class="header-progress-bar" id="home-progress-bar"></div></div>
+    </div>
+
+    <h2 class="section-title" id="roadmap">Daftar Isi</h2>
+    <p class="section-sub">
+      21 bab mengikuti urutan buku aslinya persis, supaya kamu bisa membandingkan
+      atau melanjutkan langsung dari versi bahasa Inggrisnya kapan pun perlu.
+      Bab yang belum tersedia akan menyusul secara bertahap.
+    </p>
+    <div class="chapter-grid" id="chapter-grid"><!-- diisi otomatis oleh main.js --></div>
+
+    <div class="callout callout-note">
+      <p class="callout-title">ℹ️ Tentang kursus ini</p>
+      <p>
+        Semua istilah teknis (ownership, borrowing, trait, lifetime, dsb.)
+        sengaja tidak diterjemahkan paksa — kamu akan menemukan istilah yang
+        sama persis dengan yang dipakai komunitas Rust global, dijelaskan
+        dalam Bahasa Indonesia. Progres bacaanmu disimpan otomatis di
+        perangkat ini (localStorage), tidak perlu akun.
+      </p>
+    </div>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <p>
+    Diadaptasi dari <a href="https://doc.rust-lang.org/book/" target="_blank" rel="noopener">The Rust Programming Language</a>
+    oleh Steve Klabnik, Carol Nichols, dan Chris Krycho &amp; kontributor. Rust dan logo Rust adalah merek dagang Rust Foundation.
+  </p>
+</footer>
+
+<script>window.COURSE_BASE = { root: ".", chapters: "chapters" };</script>
+<script src="assets/js/chapters-data.js"></script>
+<script src="assets/js/rust-highlight.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

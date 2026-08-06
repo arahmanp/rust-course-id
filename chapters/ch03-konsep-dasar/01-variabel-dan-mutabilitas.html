@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.1 Variabel dan Mutabilitas — Belajar Rust</title>
+<meta name="description" content="Kenapa variabel di Rust immutable secara default, cara membuatnya mutable, perbedaan dengan konstanta, dan konsep shadowing.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch03-01">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 3: Konsep Pemrograman Dasar</nav>
+    <article>
+      <p class="chapter-label">Bab 3.1</p>
+      <h1>Variabel dan Mutabilitas</h1>
+
+      <p class="lead">
+        Seperti disinggung di Bab 2, secara default variabel di Rust bersifat
+        <strong>immutable</strong> (tidak bisa diubah). Ini salah satu dari
+        banyak dorongan yang diberikan Rust supaya kamu menulis kode dengan
+        cara yang memanfaatkan keamanan dan kemudahan concurrency yang
+        ditawarkan Rust. Tapi kamu tetap punya opsi membuat variabel
+        mutable. Mari kita telusuri bagaimana dan kenapa Rust mendorong kamu
+        lebih memilih immutability, dan kapan kamu mungkin ingin
+        keluar dari itu.
+      </p>
+
+      <p>
+        Ketika sebuah variabel immutable, begitu sebuah nilai diikat ke
+        sebuah nama, kamu tidak bisa mengubah nilai itu. Untuk
+        mengilustrasikannya, buat proyek baru bernama <code>variables</code>
+        di folder <code>projects</code>-mu dengan <code>cargo new variables</code>.
+      </p>
+      <p>
+        Lalu, di folder <code>variables</code> yang baru, buka
+        <code>src/main.rs</code> dan ganti isinya dengan kode berikut (kode
+        ini belum bisa dikompilasi):
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let x = 5;
+    println!("Nilai x adalah: {x}");
+    x = 6;
+    println!("Nilai x adalah: {x}");
+}</code></pre>
+      <p>Simpan dan jalankan programnya dengan <code>cargo run</code>. Kamu akan menerima pesan error terkait immutability:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling variables v0.1.0 (file:///projects/variables)
+error[E0384]: cannot assign twice to immutable variable `x`
+ --> src/main.rs:4:5
+  |
+2 |     let x = 5;
+  |         - first assignment to `x`
+3 |     println!("Nilai x adalah: {x}");
+4 |     x = 6;
+  |     ^^^^^ cannot assign twice to immutable variable
+  |
+help: consider making this binding mutable
+  |
+2 |     let mut x = 5;
+  |         +++
+
+For more information about this error, try `rustc --explain E0384`.
+error: could not compile `variables` (bin "variables") due to 1 previous error</code></pre>
+      <p>
+        Contoh ini menunjukkan bagaimana compiler membantumu menemukan error
+        dalam programmu. Error compiler memang bisa menjengkelkan, tapi itu
+        cuma berarti programmu belum melakukan apa yang kamu mau dengan cara
+        yang aman — bukan berarti kamu bukan programmer yang baik!
+        Rustacean berpengalaman sekalipun masih sering mendapat error
+        compiler.
+      </p>
+      <p>
+        Kamu mendapat pesan error <code>cannot assign twice to immutable
+        variable `x`</code> karena kamu mencoba memberi nilai kedua ke
+        variabel <code>x</code> yang immutable.
+      </p>
+      <p>
+        Penting bagi kita mendapat error saat compile-time ketika mencoba
+        mengubah nilai yang ditandai immutable, karena situasi seperti ini
+        bisa menyebabkan bug. Kalau satu bagian kode kita beroperasi dengan
+        asumsi bahwa sebuah nilai tidak akan pernah berubah, sementara bagian
+        kode lain justru mengubah nilai itu, kemungkinan besar bagian
+        pertama tidak akan melakukan apa yang dirancang untuknya. Penyebab
+        bug semacam ini bisa sulit dilacak setelah kejadian, apalagi kalau
+        bagian kedua hanya mengubah nilainya <em>kadang-kadang</em>. Compiler
+        Rust menjamin bahwa ketika kamu menyatakan sebuah nilai tidak akan
+        berubah, nilai itu benar-benar tidak akan berubah — jadi kamu tidak
+        perlu melacaknya sendiri. Kodemu jadi lebih mudah dinalar.
+      </p>
+      <p>
+        Tapi mutability bisa sangat berguna dan membuat kode lebih nyaman
+        ditulis. Walau variabel immutable secara default, kamu bisa membuatnya
+        mutable dengan menambahkan <code>mut</code> di depan nama variabelnya,
+        seperti yang kamu lakukan di Bab 2. Menambahkan <code>mut</code> juga
+        menyampaikan maksud kepada pembaca kode di masa depan, bahwa bagian
+        kode lain akan mengubah nilai variabel ini.
+      </p>
+      <p>Misalnya, ubah <code>src/main.rs</code> menjadi:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let mut x = 5;
+    println!("Nilai x adalah: {x}");
+    x = 6;
+    println!("Nilai x adalah: {x}");
+}</code></pre>
+      <p>Saat kita jalankan sekarang, kita dapat:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling variables v0.1.0 (file:///projects/variables)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.30s
+     Running `target/debug/variables`
+Nilai x adalah: 5
+Nilai x adalah: 6</code></pre>
+      <p>
+        Kita diizinkan mengubah nilai yang diikat ke <code>x</code> dari
+        <code>5</code> menjadi <code>6</code> ketika <code>mut</code>
+        dipakai. Pada akhirnya, keputusan memakai mutability atau tidak ada
+        di tanganmu, tergantung apa yang menurutmu paling jelas dalam
+        situasi tertentu.
+      </p>
+
+      <h2 id="konstanta">Mendeklarasikan Konstanta</h2>
+      <p>
+        Seperti variabel immutable, <strong>konstanta</strong> adalah nilai
+        yang diikat ke sebuah nama dan tidak boleh diubah — tapi ada
+        beberapa perbedaan antara konstanta dan variabel.
+      </p>
+      <p>
+        Pertama, kamu tidak diperbolehkan memakai <code>mut</code> dengan
+        konstanta. Konstanta bukan cuma immutable secara default — mereka
+        <strong>selalu</strong> immutable. Kamu mendeklarasikan konstanta
+        memakai keyword <code>const</code>, bukan <code>let</code>, dan tipe
+        nilainya <strong>harus</strong> diumumkan (annotated). Kita akan
+        bahas tipe dan anotasi tipe di subbab berikutnya (3.2 Tipe Data),
+        jadi jangan khawatir soal detailnya sekarang. Cukup ingat: kamu
+        selalu harus menuliskan tipenya.
+      </p>
+      <p>
+        Konstanta bisa dideklarasikan di scope mana pun, termasuk scope
+        global, yang membuatnya berguna untuk nilai yang perlu diketahui
+        banyak bagian kode.
+      </p>
+      <p>
+        Perbedaan terakhir: konstanta hanya boleh diisi dengan ekspresi
+        konstan, bukan hasil dari nilai yang hanya bisa dihitung saat
+        runtime.
+      </p>
+      <p>Contoh deklarasi konstanta:</p>
+      <pre><code class="language-rust">const THREE_HOURS_IN_SECONDS: u32 = 60 * 60 * 3;</code></pre>
+      <p>
+        Nama konstantanya adalah <code>THREE_HOURS_IN_SECONDS</code>, dan
+        nilainya adalah hasil perkalian 60 (jumlah detik dalam semenit)
+        dengan 60 (jumlah menit dalam sejam) dengan 3 (jumlah jam yang ingin
+        kita hitung di program ini). Konvensi penamaan Rust untuk konstanta
+        adalah memakai huruf besar semua dengan underscore di antara kata.
+        Compiler mampu mengevaluasi sejumlah operasi terbatas saat
+        compile-time, yang memungkinkan kita menuliskan nilai ini dengan
+        cara yang lebih mudah dipahami dan diverifikasi, daripada langsung
+        menuliskan nilai 10.800.
+      </p>
+      <p>
+        Konstanta berlaku selama program berjalan, di dalam scope tempat ia
+        dideklarasikan. Sifat ini membuat konstanta berguna untuk nilai
+        dalam domain aplikasimu yang mungkin dibutuhkan banyak bagian
+        program, seperti jumlah poin maksimum yang boleh didapat pemain
+        sebuah game, atau kecepatan cahaya.
+      </p>
+      <div class="callout callout-tip">
+        <p class="callout-title">💡 Kenapa memberi nama pada nilai hardcoded?</p>
+        <p>
+          Memberi nama pada nilai hardcoded yang dipakai di seluruh
+          programmu sebagai konstanta membantu menyampaikan makna nilai itu
+          kepada siapa pun yang merawat kode itu nanti (termasuk dirimu
+          sendiri di masa depan!). Ini juga membantu memastikan hanya ada
+          satu tempat di kodemu yang perlu diubah kalau nilai hardcoded itu
+          perlu di-update nanti.
+        </p>
+      </div>
+
+      <h2 id="shadowing">Shadowing</h2>
+      <p>
+        Seperti yang kamu lihat di tutorial permainan tebak angka Bab 2,
+        kamu bisa mendeklarasikan variabel baru dengan nama yang sama
+        seperti variabel sebelumnya. Rustacean menyebutnya: variabel
+        pertama di-<strong>shadow</strong> (dibayangi) oleh variabel kedua —
+        artinya variabel kedua itulah yang akan "dilihat" compiler ketika
+        kamu memakai nama variabel itu. Variabel kedua secara efektif
+        membayangi variabel pertama, mengambil alih setiap pemakaian nama
+        variabel itu sampai ia sendiri dibayangi atau scope-nya berakhir.
+        Kita bisa men-shadow sebuah variabel dengan memakai nama yang sama
+        dan mengulangi keyword <code>let</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let x = 5;
+
+    let x = x + 1;
+
+    {
+        let x = x * 2;
+        println!("Nilai x di scope dalam adalah: {x}");
+    }
+
+    println!("Nilai x adalah: {x}");
+}</code></pre>
+      <p>
+        Program ini pertama mengikat <code>x</code> ke nilai <code>5</code>.
+        Lalu, ia membuat variabel <code>x</code> baru dengan mengulang
+        <code>let x =</code>, mengambil nilai aslinya dan menambahkan
+        <code>1</code>, sehingga nilai <code>x</code> menjadi <code>6</code>.
+        Kemudian, di dalam scope lebih dalam yang dibuat dengan kurung
+        kurawal, pernyataan <code>let</code> ketiga juga men-shadow
+        <code>x</code> dan membuat variabel baru, mengalikan nilai
+        sebelumnya dengan <code>2</code> sehingga <code>x</code> bernilai
+        <code>12</code>. Ketika scope itu berakhir, shadowing di dalamnya
+        juga berakhir, dan <code>x</code> kembali menjadi <code>6</code>.
+        Ketika kita jalankan program ini, hasilnya:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling variables v0.1.0 (file:///projects/variables)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/variables`
+Nilai x di scope dalam adalah: 12
+Nilai x adalah: 6</code></pre>
+      <p>
+        Shadowing berbeda dari menandai variabel sebagai <code>mut</code>,
+        karena kita akan mendapat error compile-time kalau tidak sengaja
+        mencoba menetapkan ulang (reassign) variabel ini tanpa memakai
+        keyword <code>let</code>. Dengan memakai <code>let</code>, kita bisa
+        melakukan beberapa transformasi pada sebuah nilai, tapi variabelnya
+        tetap immutable setelah transformasi-transformasi itu selesai.
+      </p>
+      <p>
+        Perbedaan lain antara <code>mut</code> dan shadowing: karena kita
+        secara efektif membuat variabel baru setiap kali memakai keyword
+        <code>let</code> lagi, kita bisa mengubah tipe nilainya tapi tetap
+        memakai nama yang sama. Misalnya, katakanlah programmu meminta
+        pengguna menunjukkan berapa banyak spasi yang mereka inginkan di
+        antara sebuah teks dengan memasukkan karakter spasi, lalu kita ingin
+        menyimpan input itu sebagai angka:
+      </p>
+      <pre><code class="language-rust">let spaces = "   ";
+let spaces = spaces.len();</code></pre>
+      <p>
+        Variabel <code>spaces</code> pertama bertipe string, dan variabel
+        <code>spaces</code> kedua bertipe angka. Shadowing dengan begitu
+        menyelamatkan kita dari keharusan membuat nama berbeda, seperti
+        <code>spaces_str</code> dan <code>spaces_num</code> — kita cukup
+        memakai ulang nama <code>spaces</code> yang lebih sederhana. Tapi
+        kalau kita mencoba memakai <code>mut</code> untuk kasus ini:
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <pre><code class="language-rust">let mut spaces = "   ";
+spaces = spaces.len();</code></pre>
+      <p>kita akan mendapat error compile-time. Errornya bilang kita tidak diizinkan mengubah tipe sebuah variabel:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling variables v0.1.0 (file:///projects/variables)
+error[E0308]: mismatched types
+ --> src/main.rs:3:14
+  |
+2 |     let mut spaces = "   ";
+  |                      ----- expected due to this value
+3 |     spaces = spaces.len();
+  |              ^^^^^^^^^^^^ expected `&str`, found `usize`
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `variables` (bin "variables") due to 1 previous error</code></pre>
+
+      <div class="quiz">
+        <p class="quiz-question">Apa perbedaan mendasar antara membuat variabel <code>mut</code> dan melakukan shadowing dengan <code>let</code> lagi?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Keduanya justru mengizinkan hal itu — dengan mut kamu mengganti nilai variabel yang ada, dengan shadowing kamu membuat variabel baru dengan nama yang sama. Bedanya bukan di sana.">Keduanya sama-sama tidak mengizinkan variabelnya berganti tipe</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. mut mengubah nilai variabel yang sama (tipenya harus tetap sama), sementara let mengulang menciptakan variabel baru yang kebetulan memakai nama sama — sehingga tipenya boleh berbeda dari variabel sebelumnya.">Shadowing (let berulang) sebenarnya membuat variabel baru sehingga tipenya boleh berubah, sedangkan mut hanya mengganti nilai tanpa mengubah tipe</button>
+          <button class="quiz-option" data-explain="mut justru tidak menghasilkan error compile-time saat reassignment — itu memang fungsinya. Error compile-time terjadi kalau kamu reassign TANPA mut sama sekali.">mut selalu menghasilkan error compile-time, sedangkan shadowing tidak pernah</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Variabel di Rust immutable secara default; tambahkan <code>mut</code> untuk membuatnya bisa diubah.</li>
+          <li>Konstanta (<code>const</code>) selalu immutable, wajib beranotasi tipe, dan nilainya harus bisa dihitung saat compile-time.</li>
+          <li>Shadowing (mengulang <code>let</code> dengan nama sama) membuat variabel baru — bisa mengubah tipe, dan variabel lama tetap immutable setelah transformasi.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

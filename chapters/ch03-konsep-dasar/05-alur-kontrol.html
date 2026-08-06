@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.5 Alur Kontrol — Belajar Rust</title>
+<meta name="description" content="Ekspresi if/else, if di dalam let, dan tiga jenis loop di Rust: loop, while, dan for.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch03-05">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 3: Konsep Pemrograman Dasar</nav>
+    <article>
+      <p class="chapter-label">Bab 3.5</p>
+      <h1>Alur Kontrol</h1>
+
+      <p class="lead">
+        Kemampuan menjalankan kode tergantung apakah sebuah kondisi
+        <code>true</code>, dan kemampuan menjalankan kode berulang kali
+        selama sebuah kondisi <code>true</code>, adalah komponen dasar di
+        hampir semua bahasa pemrograman. Konstruksi paling umum untuk
+        mengontrol alur eksekusi kode Rust adalah ekspresi <code>if</code>
+        dan loop.
+      </p>
+
+      <h2 id="if">Ekspresi if</h2>
+      <p>
+        Ekspresi <code>if</code> memungkinkanmu bercabang kode tergantung
+        kondisi. Kamu memberikan sebuah kondisi lalu menyatakan, "Kalau
+        kondisi ini terpenuhi, jalankan blok kode ini. Kalau tidak
+        terpenuhi, jangan jalankan blok kode ini."
+      </p>
+      <p>Buat proyek baru bernama <code>branches</code> untuk mengeksplorasi ekspresi <code>if</code>. Di <code>src/main.rs</code>, tulis:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let number = 3;
+
+    if number < 5 {
+        println!("kondisinya benar");
+    } else {
+        println!("kondisinya salah");
+    }
+}</code></pre>
+      <p>
+        Semua ekspresi <code>if</code> diawali keyword <code>if</code>,
+        diikuti sebuah kondisi. Di sini, kondisinya memeriksa apakah
+        variabel <code>number</code> bernilai kurang dari 5. Kita letakkan
+        blok kode yang dijalankan kalau kondisinya <code>true</code>
+        langsung setelah kondisi tersebut, di dalam kurung kurawal. Blok
+        kode yang berasosiasi dengan kondisi di ekspresi <code>if</code>
+        kadang disebut <strong>arm</strong>, sama seperti arm di ekspresi
+        <code>match</code> yang kita bahas di Bab 2.
+      </p>
+      <p>
+        Secara opsional, kita juga bisa menyertakan ekspresi <code>else</code>
+        — seperti di contoh ini — untuk memberi program sebuah blok kode
+        alternatif yang dijalankan kalau kondisinya <code>false</code>.
+        Kalau kamu tidak menyediakan ekspresi <code>else</code> dan
+        kondisinya <code>false</code>, program hanya akan melewati blok
+        <code>if</code> dan lanjut ke kode berikutnya.
+      </p>
+      <p>Coba jalankan kode ini; kamu seharusnya melihat output:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/branches`
+kondisinya benar</code></pre>
+      <p>Mari coba ubah nilai <code>number</code> menjadi nilai yang membuat kondisinya <code>false</code>:</p>
+      <pre><code class="language-rust">let number = 7;</code></pre>
+      <p>Jalankan lagi programnya, dan lihat hasilnya:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/branches`
+kondisinya salah</code></pre>
+      <p>
+        Perlu dicatat juga: kondisi di kode ini <strong>harus</strong>
+        bertipe <code>bool</code>. Kalau kondisinya bukan <code>bool</code>,
+        kita akan mendapat error. Misalnya, coba jalankan kode berikut:
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let number = 3;
+
+    if number {
+        println!("number bernilai three");
+    }
+}</code></pre>
+      <p>Kondisi <code>if</code> ini bernilai <code>3</code>, dan Rust melempar error:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+error[E0308]: mismatched types
+ --> src/main.rs:4:8
+  |
+4 |     if number {
+  |        ^^^^^^ expected `bool`, found integer
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `branches` (bin "branches") due to 1 previous error</code></pre>
+      <p>
+        Error ini menandakan Rust mengharapkan <code>bool</code> tapi
+        mendapat integer. Berbeda dari bahasa seperti Ruby dan JavaScript,
+        Rust tidak akan otomatis mencoba mengonversi tipe non-Boolean
+        menjadi Boolean. Kamu harus eksplisit dan selalu memberi
+        <code>if</code> sebuah Boolean sebagai kondisinya. Kalau kita ingin
+        blok kode <code>if</code> hanya berjalan ketika sebuah angka tidak
+        sama dengan <code>0</code>, misalnya, kita bisa mengubah ekspresi
+        <code>if</code>-nya menjadi:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let number = 3;
+
+    if number != 0 {
+        println!("number bernilai selain nol");
+    }
+}</code></pre>
+      <p>Menjalankan kode ini akan mencetak <code>number bernilai selain nol</code>.</p>
+
+      <h3 id="else-if">Menangani Banyak Kondisi dengan else if</h3>
+      <p>Kamu bisa memakai banyak kondisi dengan menggabungkan <code>if</code> dan <code>else</code> dalam ekspresi <code>else if</code>. Contoh:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let number = 6;
+
+    if number % 4 == 0 {
+        println!("number habis dibagi 4");
+    } else if number % 3 == 0 {
+        println!("number habis dibagi 3");
+    } else if number % 2 == 0 {
+        println!("number habis dibagi 2");
+    } else {
+        println!("number tidak habis dibagi 4, 3, atau 2");
+    }
+}</code></pre>
+      <p>Program ini punya empat kemungkinan jalur. Setelah dijalankan, kamu akan melihat output:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/branches`
+number habis dibagi 3</code></pre>
+      <p>
+        Saat program ini dijalankan, ia memeriksa setiap ekspresi
+        <code>if</code> secara berurutan dan menjalankan badan pertama yang
+        kondisinya bernilai <code>true</code>. Perhatikan walaupun 6 juga
+        habis dibagi 2, kita tidak melihat output <code>number habis dibagi
+        2</code>, atau teks dari blok <code>else</code>. Itu karena Rust
+        hanya menjalankan blok untuk kondisi <code>true</code> pertama, dan
+        begitu ditemukan, ia bahkan tidak lagi memeriksa yang lain.
+      </p>
+      <p>
+        Memakai terlalu banyak ekspresi <code>else if</code> bisa membuat
+        kodemu berantakan, jadi kalau kamu punya lebih dari satu, kamu
+        mungkin ingin merefactor kodenya. Bab 6 menjelaskan konstruksi
+        percabangan Rust yang lebih kuat bernama <code>match</code> untuk
+        kasus-kasus seperti ini.
+      </p>
+
+      <h3 id="if-let">Memakai if dalam Statement let</h3>
+      <p>
+        Karena <code>if</code> adalah ekspresi, kita bisa memakainya di sisi
+        kanan sebuah statement <code>let</code> untuk mengikat hasilnya ke
+        sebuah variabel:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let condition = true;
+    let number = if condition { 5 } else { 6 };
+
+    println!("Nilai number adalah: {number}");
+}</code></pre>
+      <p>
+        Variabel <code>number</code> akan terikat ke sebuah nilai berdasarkan
+        hasil ekspresi <code>if</code>. Jalankan kode ini untuk melihat apa
+        yang terjadi:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.30s
+     Running `target/debug/branches`
+Nilai number adalah: 5</code></pre>
+      <p>
+        Ingat, blok kode dievaluasi menjadi ekspresi terakhir di dalamnya,
+        dan angka begitu saja juga ekspresi. Dalam kasus ini, nilai dari
+        seluruh ekspresi <code>if</code> bergantung pada blok kode mana yang
+        dijalankan. Ini berarti nilai yang berpotensi menjadi hasil dari
+        setiap arm <code>if</code> harus bertipe sama; di contoh sebelumnya,
+        hasil arm <code>if</code> maupun arm <code>else</code> sama-sama
+        integer <code>i32</code>. Kalau tipenya tidak cocok, seperti contoh
+        berikut, kita akan mendapat error:
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let condition = true;
+
+    let number = if condition { 5 } else { "six" };
+
+    println!("Nilai number adalah: {number}");
+}</code></pre>
+      <p>
+        Ketika kita coba kompilasi kode ini, kita akan dapat error. Arm
+        <code>if</code> dan <code>else</code> punya tipe nilai yang tidak
+        kompatibel, dan Rust menunjukkan persis di mana masalahnya:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling branches v0.1.0 (file:///projects/branches)
+error[E0308]: `if` and `else` have incompatible types
+ --> src/main.rs:4:44
+  |
+4 |     let number = if condition { 5 } else { "six" };
+  |                                 -          ^^^^^ expected integer, found `&str`
+  |                                 |
+  |                                 expected because of this
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `branches` (bin "branches") due to 1 previous error</code></pre>
+      <p>
+        Ekspresi di blok <code>if</code> dievaluasi menjadi integer, dan
+        ekspresi di blok <code>else</code> dievaluasi menjadi string. Ini
+        tidak akan bekerja, karena variabel harus punya satu tipe tunggal,
+        dan Rust perlu tahu secara pasti saat compile-time tipe apa yang
+        dimiliki variabel <code>number</code>. Mengetahui tipe
+        <code>number</code> memungkinkan compiler memverifikasi tipenya
+        valid di setiap tempat kita memakai <code>number</code>. Rust tidak
+        akan bisa melakukan itu kalau tipe <code>number</code> baru
+        ditentukan saat runtime — compiler-nya akan jadi lebih kompleks dan
+        memberi lebih sedikit jaminan tentang kode itu kalau ia harus
+        melacak banyak kemungkinan tipe hipotetis untuk variabel apa pun.
+      </p>
+
+      <div class="quiz">
+        <p class="quiz-question">Kenapa kode <code>let number = if condition { 5 } else { "six" };</code> gagal dikompilasi?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Justru sebaliknya — if adalah ekspresi di Rust, sehingga hasilnya BOLEH diikat ke sebuah variabel lewat let. Itu bukan masalahnya di sini." >if bukan ekspresi di Rust, jadi hasilnya tidak bisa diikat ke variabel</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. Arm if menghasilkan i32 (5) dan arm else menghasilkan &str (\"six\") — dua tipe berbeda. Rust harus tahu satu tipe pasti untuk number saat compile-time, jadi ini error mismatched types.">Arm if menghasilkan tipe integer sedangkan arm else menghasilkan tipe string — keduanya harus bertipe sama</button>
+          <button class="quiz-option" data-explain="Variabel condition sudah valid bertipe bool sejak awal — bukan itu masalahnya.">Variabel condition harus dideklarasikan dengan tipe bool secara eksplisit</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <h2 id="loop">Pengulangan dengan Loop</h2>
+      <p>
+        Sering kali berguna untuk menjalankan sebuah blok kode lebih dari
+        sekali. Untuk tugas ini, Rust menyediakan beberapa
+        <strong>loop</strong>, yang akan menjalankan kode di dalam badan
+        loop sampai akhir lalu langsung kembali ke awal. Untuk bereksperimen
+        dengan loop, mari buat proyek baru bernama <code>loops</code>.
+      </p>
+      <p>Rust punya tiga jenis loop: <code>loop</code>, <code>while</code>, dan <code>for</code>. Mari coba masing-masing.</p>
+
+      <h3 id="loop-keyword">Mengulang Kode dengan loop</h3>
+      <p>
+        Keyword <code>loop</code> memberi tahu Rust untuk menjalankan sebuah
+        blok kode berulang kali, entah selamanya atau sampai kamu secara
+        eksplisit memberi tahu untuk berhenti.
+      </p>
+      <p>Sebagai contoh, ubah <code>src/main.rs</code> di folder <code>loops</code>-mu menjadi:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    loop {
+        println!("lagi!");
+    }
+}</code></pre>
+      <p>
+        Ketika kita jalankan program ini, kita akan melihat <code>lagi!</code>
+        dicetak berulang-ulang terus menerus sampai kita menghentikan
+        programnya secara manual. Kebanyakan terminal mendukung pintasan
+        keyboard <kbd>ctrl</kbd>-<kbd>c</kbd> untuk menginterupsi program
+        yang terjebak dalam loop tanpa henti. Coba jalankan:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling loops v0.1.0 (file:///projects/loops)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running `target/debug/loops`
+lagi!
+lagi!
+lagi!
+lagi!
+^Clagi!</code></pre>
+      <p>
+        Simbol <code>^C</code> merepresentasikan titik kamu menekan
+        <kbd>ctrl</kbd>-<kbd>c</kbd>. Kamu mungkin melihat atau tidak
+        melihat kata <code>lagi!</code> tercetak setelah <code>^C</code>,
+        tergantung posisi kode saat menerima sinyal interupsi.
+      </p>
+      <p>
+        Untungnya, Rust juga menyediakan cara keluar dari loop lewat kode.
+        Kamu bisa menaruh keyword <code>break</code> di dalam loop untuk
+        memberi tahu program kapan berhenti menjalankan loop itu. Ingat kita
+        sudah melakukan ini di permainan tebak angka Bab 2 untuk keluar dari
+        program saat pengguna menang dengan menebak angka yang benar.
+      </p>
+      <p>
+        Kita juga memakai <code>continue</code> di permainan tebak angka,
+        yang dalam sebuah loop memberi tahu program untuk melewati sisa kode
+        di iterasi ini dan lanjut ke iterasi berikutnya.
+      </p>
+
+      <h3 id="return-loop">Mengembalikan Nilai dari Loop</h3>
+      <p>
+        Salah satu kegunaan <code>loop</code> adalah mencoba ulang sebuah
+        operasi yang kamu tahu mungkin gagal, seperti memeriksa apakah
+        sebuah thread sudah menyelesaikan pekerjaannya. Kamu mungkin juga
+        perlu mengoper hasil operasi itu ke luar loop, ke bagian kode
+        lainnya. Untuk melakukan ini, kamu bisa menambahkan nilai yang ingin
+        dikembalikan setelah ekspresi <code>break</code> yang kamu pakai
+        untuk menghentikan loop; nilai itu akan dikembalikan dari loop
+        supaya bisa kamu pakai, seperti ini:
+      </p>
+      <pre><code class="language-rust">fn main() {
+    let mut counter = 0;
+
+    let result = loop {
+        counter += 1;
+
+        if counter == 10 {
+            break counter * 2;
+        }
+    };
+
+    println!("Hasilnya adalah {result}");
+}</code></pre>
+      <p>
+        Sebelum loop, kita mendeklarasikan variabel bernama
+        <code>counter</code> dan menginisialisasinya ke <code>0</code>.
+        Lalu, kita mendeklarasikan variabel bernama <code>result</code>
+        untuk menampung nilai yang dikembalikan dari loop. Di setiap
+        iterasi loop, kita menambah <code>1</code> ke variabel
+        <code>counter</code>, lalu memeriksa apakah <code>counter</code>
+        sama dengan <code>10</code>. Kalau ya, kita pakai keyword
+        <code>break</code> dengan nilai <code>counter * 2</code>. Setelah
+        loop, kita pakai titik koma untuk mengakhiri statement yang
+        menetapkan nilai ke <code>result</code>. Terakhir, kita mencetak
+        nilai di <code>result</code>, yang dalam kasus ini adalah
+        <code>20</code>.
+      </p>
+      <p>
+        Kamu juga bisa <code>return</code> dari dalam loop. Sementara
+        <code>break</code> hanya keluar dari loop saat ini,
+        <code>return</code> selalu keluar dari seluruh fungsi.
+      </p>
+
+      <h3 id="loop-label">Membedakan Antar Loop dengan Label</h3>
+      <p>
+        Kalau kamu punya loop di dalam loop, <code>break</code> dan
+        <code>continue</code> berlaku untuk loop paling dalam di titik itu.
+        Kamu bisa secara opsional menentukan <strong>loop label</strong>
+        pada sebuah loop, lalu memakainya bersama <code>break</code> atau
+        <code>continue</code> untuk menentukan bahwa keyword itu berlaku
+        untuk loop yang diberi label, bukan loop paling dalam. Loop label
+        harus diawali tanda kutip tunggal. Berikut contoh dengan dua loop
+        bersarang:
+      </p>
+      <pre><code class="language-rust">fn main() {
+    let mut count = 0;
+    'counting_up: loop {
+        println!("count = {count}");
+        let mut remaining = 10;
+
+        loop {
+            println!("remaining = {remaining}");
+            if remaining == 9 {
+                break;
+            }
+            if count == 2 {
+                break 'counting_up;
+            }
+            remaining -= 1;
+        }
+
+        count += 1;
+    }
+    println!("End count = {count}");
+}</code></pre>
+      <p>
+        Loop luar diberi label <code>'counting_up</code>, dan akan
+        menghitung naik dari 0 sampai 2. Loop dalam, tanpa label, menghitung
+        turun dari 10 ke 9. <code>break</code> pertama yang tidak menentukan
+        label hanya akan keluar dari loop dalam. Statement
+        <code>break 'counting_up;</code> akan keluar dari loop luar. Kode
+        ini mencetak:
+      </p>
+      <pre><code class="language-text">count = 0
+remaining = 10
+remaining = 9
+count = 1
+remaining = 10
+remaining = 9
+count = 2
+remaining = 10
+End count = 2</code></pre>
+
+      <h3 id="while">Loop Kondisional dengan while</h3>
+      <p>
+        Program sering kali perlu mengevaluasi sebuah kondisi di dalam
+        loop. Selama kondisinya <code>true</code>, loop-nya berjalan. Ketika
+        kondisinya sudah tidak <code>true</code> lagi, program memanggil
+        <code>break</code>, menghentikan loop-nya. Perilaku seperti ini bisa
+        diimplementasikan dengan kombinasi <code>loop</code>, <code>if</code>,
+        <code>else</code>, dan <code>break</code> — kamu boleh coba sekarang
+        kalau mau. Tapi pola ini begitu umum sehingga Rust punya konstruksi
+        bahasa bawaan untuknya, disebut loop <code>while</code>. Berikut
+        kita pakai <code>while</code> untuk mengulang program tiga kali,
+        menghitung mundur setiap kali, lalu setelah loop-nya, mencetak
+        sebuah pesan dan keluar:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let mut number = 3;
+
+    while number != 0 {
+        println!("{number}!");
+
+        number -= 1;
+    }
+
+    println!("LUNCUR!!!");
+}</code></pre>
+      <p>
+        Konstruksi ini menghilangkan banyak nesting yang akan dibutuhkan
+        kalau kamu memakai <code>loop</code>, <code>if</code>, <code>else</code>,
+        dan <code>break</code>, dan jauh lebih jelas. Selama sebuah kondisi
+        bernilai <code>true</code>, kodenya berjalan; kalau tidak, loop-nya
+        keluar.
+      </p>
+
+      <h3 id="for">Melakukan Perulangan Lewat Koleksi dengan for</h3>
+      <p>
+        Kamu bisa memilih memakai konstruksi <code>while</code> untuk
+        melakukan perulangan pada elemen-elemen sebuah koleksi, seperti
+        array. Misalnya, loop berikut mencetak setiap elemen di array
+        <code>a</code>.
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let a = [10, 20, 30, 40, 50];
+    let mut index = 0;
+
+    while index < 5 {
+        println!("nilainya adalah: {}", a[index]);
+
+        index += 1;
+    }
+}</code></pre>
+      <p>
+        Di sini, kode menghitung naik lewat elemen-elemen dalam array. Ia
+        mulai dari indeks <code>0</code>, lalu melakukan loop sampai
+        mencapai indeks terakhir dalam array (yaitu, ketika
+        <code>index &lt; 5</code> sudah tidak <code>true</code> lagi).
+        Menjalankan kode ini akan mencetak setiap elemen dalam array:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling loops v0.1.0 (file:///projects/loops)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.32s
+     Running `target/debug/loops`
+nilainya adalah: 10
+nilainya adalah: 20
+nilainya adalah: 30
+nilainya adalah: 40
+nilainya adalah: 50</code></pre>
+      <p>
+        Kelima nilai array muncul di terminal, sesuai harapan. Walaupun
+        <code>index</code> akan mencapai nilai <code>5</code> di suatu
+        titik, loop-nya berhenti dijalankan sebelum mencoba mengambil
+        elemen keenam dari array.
+      </p>
+      <p>
+        Tapi, pendekatan ini rawan error — kita bisa membuat program panic
+        kalau nilai index atau kondisi ujinya salah. Misalnya, kalau kamu
+        mengubah definisi array <code>a</code> menjadi punya empat elemen,
+        tapi lupa mengubah kondisinya menjadi <code>while index < 4</code>,
+        kodenya akan panic. Ini juga lambat, karena compiler menambahkan
+        kode runtime untuk melakukan pengecekan kondisional apakah
+        indeksnya masih dalam batas array di setiap iterasi loop.
+      </p>
+      <p>
+        Sebagai alternatif yang lebih ringkas, kamu bisa memakai loop
+        <code>for</code> dan menjalankan sebuah kode untuk setiap item
+        dalam koleksi. Loop <code>for</code> terlihat seperti kode berikut.
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let a = [10, 20, 30, 40, 50];
+
+    for element in a {
+        println!("nilainya adalah: {element}");
+    }
+}</code></pre>
+      <p>
+        Ketika kita jalankan kode ini, kita akan melihat output yang sama
+        seperti sebelumnya. Yang lebih penting, kita sekarang meningkatkan
+        keamanan kode dan menghilangkan kemungkinan bug yang bisa terjadi
+        akibat melewati ujung array atau tidak sampai jauh dan melewatkan
+        beberapa item. Kode mesin yang dihasilkan dari loop <code>for</code>
+        juga bisa lebih efisien, karena indeksnya tidak perlu dibandingkan
+        dengan panjang array di setiap iterasi.
+      </p>
+      <p>
+        Memakai loop <code>for</code>, kamu tidak perlu ingat mengubah kode
+        lain kalau kamu mengubah jumlah nilai dalam array, seperti yang
+        harus kamu lakukan dengan metode di contoh <code>while</code>
+        sebelumnya.
+      </p>
+      <p>
+        Keamanan dan keringkasan loop <code>for</code> membuatnya menjadi
+        konstruksi loop yang paling umum dipakai di Rust. Bahkan dalam
+        situasi di mana kamu ingin menjalankan kode sejumlah kali tertentu,
+        seperti contoh hitung mundur yang memakai loop <code>while</code>
+        sebelumnya, kebanyakan Rustacean akan memakai loop <code>for</code>.
+        Caranya adalah memakai <code>Range</code>, disediakan oleh standard
+        library, yang menghasilkan semua angka berurutan mulai dari satu
+        angka sampai sebelum angka lainnya.
+      </p>
+      <p>
+        Begini tampilan hitung mundur memakai loop <code>for</code> dan
+        method lain yang belum kita bahas, <code>rev</code>, untuk
+        membalik urutan range-nya:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    for number in (1..4).rev() {
+        println!("{number}!");
+    }
+    println!("LUNCUR!!!");
+}</code></pre>
+      <p>Kode ini sedikit lebih bagus, bukan?</p>
+
+      <div class="callout callout-exercise">
+        <p class="callout-title">🏋️ Coba Sendiri</p>
+        <p>
+          Kamu berhasil menyelesaikan bab ini! Ini bab yang cukup besar —
+          kamu belajar tentang variabel, tipe data scalar dan compound,
+          fungsi, komentar, ekspresi <code>if</code>, dan loop. Untuk
+          berlatih dengan konsep-konsep yang dibahas di bab ini, coba
+          bangun program untuk:
+        </p>
+        <ul>
+          <li>Mengonversi suhu antara Fahrenheit dan Celsius.</li>
+          <li>Menghasilkan bilangan Fibonacci ke-<em>n</em>.</li>
+          <li>Mencetak lirik lagu Natal "The Twelve Days of Christmas", memanfaatkan pengulangan di lagunya.</li>
+        </ul>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan Bab 3</p>
+        <ul>
+          <li>Variabel immutable secara default (<code>mut</code> untuk mengubahnya), konstanta selalu immutable, dan shadowing membuat variabel baru dengan nama sama.</li>
+          <li>Tipe scalar (integer, float, bool, char) dan tipe compound (tuple, array) adalah fondasi sistem tipe Rust.</li>
+          <li>Fungsi memakai snake_case, parameter wajib beranotasi tipe, dan nilai kembaliannya adalah ekspresi terakhir (tanpa titik koma) di badannya.</li>
+          <li><code>if</code> adalah ekspresi (bisa dipakai di <code>let</code>), kondisinya wajib <code>bool</code>.</li>
+          <li>Tiga jenis loop: <code>loop</code> (tanpa henti, bisa mengembalikan nilai lewat <code>break nilai</code>), <code>while</code> (kondisional), dan <code>for</code> (paling umum, aman, dan ringkas untuk koleksi/range).</li>
+        </ul>
+        <p>
+          Ketika kamu siap lanjut, kita akan bahas sebuah konsep di Rust
+          yang <em>tidak</em> lazim ada di bahasa pemrograman lain:
+          <strong>ownership</strong>.
+        </p>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5.2 Contoh Program Menggunakan Struct — Belajar Rust</title>
+<meta name="description" content="Merefactor program penghitung luas persegi panjang langkah demi langkah dari variabel lepas menjadi tuple lalu struct, plus trait Debug dan macro dbg!.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch05-02">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 5: Struct</nav>
+    <article>
+      <p class="chapter-label">Bab 5.2</p>
+      <h1>Contoh Program Menggunakan Struct</h1>
+
+      <p class="lead">
+        Untuk memahami kapan kita mungkin ingin memakai struct, mari tulis
+        program yang menghitung luas sebuah persegi panjang. Kita akan
+        mulai memakai variabel tunggal, lalu me-refactor programnya sampai
+        akhirnya memakai struct.
+      </p>
+      <p>
+        Mari buat proyek binary baru dengan Cargo bernama
+        <code>rectangles</code> yang akan menerima lebar dan tinggi sebuah
+        persegi panjang dalam pixel dan menghitung luasnya. Berikut program
+        singkat dengan salah satu cara melakukannya, di
+        <code>src/main.rs</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let width1 = 30;
+    let height1 = 50;
+
+    println!(
+        "Luas persegi panjangnya adalah {} pixel persegi.",
+        area(width1, height1)
+    );
+}
+
+fn area(width: u32, height: u32) -> u32 {
+    width * height
+}</code></pre>
+      <p>Sekarang, jalankan program ini dengan <code>cargo run</code>:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling rectangles v0.1.0 (file:///projects/rectangles)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.42s
+     Running `target/debug/rectangles`
+Luas persegi panjangnya adalah 1500 pixel persegi.</code></pre>
+      <p>
+        Kode ini berhasil menghitung luas persegi panjangnya dengan
+        memanggil fungsi <code>area</code> dengan masing-masing dimensi,
+        tapi kita bisa membuat kode ini lebih jelas dan mudah dibaca.
+      </p>
+      <p>Masalah kode ini terlihat jelas di signature <code>area</code>:</p>
+      <pre><code class="language-rust">fn area(width: u32, height: u32) -> u32 {</code></pre>
+      <p>
+        Fungsi <code>area</code> seharusnya menghitung luas satu persegi
+        panjang, tapi fungsi yang kita tulis punya dua parameter, dan
+        tidak ada satu pun bagian program kita yang menunjukkan bahwa
+        kedua parameter itu saling terkait. Akan lebih mudah dibaca dan
+        dikelola kalau kita mengelompokkan lebar dan tinggi bersama-sama.
+        Kita sudah membahas satu cara melakukannya di subbab 3.2: memakai
+        tuple.
+      </p>
+
+      <h2 id="refactor-tuple">Refactor Memakai Tuple</h2>
+      <p>Berikut versi lain program kita yang memakai tuple:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let rect1 = (30, 50);
+
+    println!(
+        "Luas persegi panjangnya adalah {} pixel persegi.",
+        area(rect1)
+    );
+}
+
+fn area(dimensions: (u32, u32)) -> u32 {
+    dimensions.0 * dimensions.1
+}</code></pre>
+      <p>
+        Di satu sisi, program ini lebih baik. Tuple memungkinkan kita
+        menambahkan sedikit struktur, dan sekarang kita cuma mengoper satu
+        argumen. Tapi di sisi lain, versi ini kurang jelas: tuple tidak
+        memberi nama pada elemen-elemennya, jadi kita harus mengindeks ke
+        bagian-bagian tuple-nya, membuat perhitungan kita jadi kurang
+        gamblang.
+      </p>
+      <p>
+        Menukar lebar dan tinggi tidak akan jadi masalah untuk perhitungan
+        luasnya, tapi kalau kita ingin menggambar persegi panjangnya di
+        layar, itu akan jadi masalah! Kita harus ingat bahwa
+        <code>width</code> adalah indeks tuple <code>0</code> dan
+        <code>height</code> adalah indeks tuple <code>1</code>. Ini akan
+        makin sulit bagi orang lain untuk memahami dan mengingatnya kalau
+        mereka memakai kode kita. Karena kita tidak menyampaikan makna
+        data kita di dalam kode, sekarang jadi lebih mudah memasukkan
+        error.
+      </p>
+
+      <h2 id="refactor-struct">Refactor Memakai Struct: Menambah Makna</h2>
+      <p>
+        Kita memakai struct untuk menambah makna dengan memberi label pada
+        data. Kita bisa mengubah tuple yang kita pakai menjadi struct
+        dengan nama untuk keseluruhannya sekaligus nama untuk
+        bagian-bagiannya:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+fn main() {
+    let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+
+    println!(
+        "Luas persegi panjangnya adalah {} pixel persegi.",
+        area(&rect1)
+    );
+}
+
+fn area(rectangle: &Rectangle) -> u32 {
+    rectangle.width * rectangle.height
+}</code></pre>
+      <p>
+        Di sini, kita mendefinisikan sebuah struct dan menamainya
+        <code>Rectangle</code>. Di dalam kurung kurawal, kita definisikan
+        field-nya sebagai <code>width</code> dan <code>height</code>,
+        keduanya bertipe <code>u32</code>. Lalu, di <code>main</code>, kita
+        buat sebuah instance <code>Rectangle</code> tertentu dengan lebar
+        <code>30</code> dan tinggi <code>50</code>.
+      </p>
+      <p>
+        Fungsi <code>area</code> kita sekarang didefinisikan dengan satu
+        parameter, yang kita namai <code>rectangle</code>, bertipe
+        immutable borrow dari sebuah instance struct <code>Rectangle</code>.
+        Seperti disinggung di Bab 4, kita ingin meminjam struct-nya,
+        bukan mengambil ownership-nya. Dengan cara ini, <code>main</code>
+        tetap memegang ownership-nya dan bisa terus memakai
+        <code>rect1</code>, itulah alasan kita memakai <code>&amp;</code>
+        di signature fungsi dan di titik pemanggilannya.
+      </p>
+      <p>
+        Fungsi <code>area</code> mengakses field <code>width</code> dan
+        <code>height</code> dari instance <code>Rectangle</code>-nya
+        (perhatikan mengakses field dari instance struct yang dipinjam
+        tidak memindahkan nilai field-nya, itulah kenapa kamu sering
+        melihat struct dipinjam). Signature fungsi <code>area</code> kita
+        sekarang mengatakan persis apa yang kita maksud: menghitung luas
+        <code>Rectangle</code>, memakai field <code>width</code> dan
+        <code>height</code>-nya. Ini menyampaikan bahwa lebar dan tinggi
+        saling terkait satu sama lain, dan memberi nama yang deskriptif
+        pada nilai-nilai itu daripada memakai nilai indeks tuple
+        <code>0</code> dan <code>1</code>. Ini kemenangan untuk kejelasan
+        kode.
+      </p>
+
+      <h2 id="derived-traits">Menambah Fungsionalitas dengan Derived Trait</h2>
+      <p>
+        Akan berguna kalau kita bisa mencetak instance <code>Rectangle</code>
+        selagi kita men-debug program kita, untuk melihat nilai semua
+        field-nya. Berikut kita coba memakai macro <code>println!</code>
+        seperti yang sudah kita pakai di bab-bab sebelumnya. Tapi ini
+        tidak akan bekerja.
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+fn main() {
+    let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+
+    println!("rect1 is {rect1}");
+}</code></pre>
+      <p>Ketika kita kompilasi kode ini, kita dapat error dengan pesan inti:</p>
+      <pre><code class="language-text">error[E0277]: `Rectangle` doesn't implement `std::fmt::Display`</code></pre>
+      <p>
+        Macro <code>println!</code> bisa melakukan banyak jenis
+        formatting, dan secara default, kurung kurawal memberi tahu
+        <code>println!</code> memakai format yang dikenal sebagai
+        <code>Display</code>: output yang dirancang untuk langsung
+        dikonsumsi pengguna akhir. Tipe primitif yang sudah kita lihat
+        sejauh ini mengimplementasikan <code>Display</code> secara default
+        karena hanya ada satu cara kamu ingin menampilkan <code>1</code>
+        atau tipe primitif lain ke pengguna. Tapi dengan struct, cara
+        <code>println!</code> harus memformat outputnya kurang jelas
+        karena ada lebih banyak kemungkinan tampilan: apakah kamu ingin
+        koma atau tidak? Apakah kamu ingin mencetak kurung kurawalnya?
+        Haruskah semua field ditampilkan? Karena ambiguitas ini, Rust
+        tidak mencoba menebak apa yang kita mau, dan struct tidak punya
+        implementasi <code>Display</code> bawaan untuk dipakai dengan
+        <code>println!</code> dan placeholder <code>{}</code>.
+      </p>
+      <p>Kalau kita terus membaca errornya, kita akan menemukan catatan berguna ini:</p>
+      <pre><code class="language-text">= note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead</code></pre>
+      <p>
+        Mari coba! Pemanggilan macro <code>println!</code> sekarang akan
+        terlihat seperti <code>println!("rect1 is {rect1:?}");</code>.
+        Menaruh specifier <code>:?</code> di dalam kurung kurawal memberi
+        tahu <code>println!</code> kita ingin memakai format output
+        bernama <code>Debug</code>. Trait <code>Debug</code>
+        memungkinkan kita mencetak struct kita dengan cara yang berguna
+        untuk developer, supaya kita bisa melihat nilainya selagi
+        men-debug kode kita.
+      </p>
+      <p>Kompilasi kode dengan perubahan ini. Yah! Kita masih dapat error:</p>
+      <pre><code class="language-text">error[E0277]: `Rectangle` doesn't implement `Debug`</code></pre>
+      <p>Tapi lagi-lagi, compiler memberi kita catatan yang berguna:</p>
+      <pre><code class="language-text">help: consider annotating `Rectangle` with `#[derive(Debug)]`</code></pre>
+      <p>
+        Rust <strong>memang</strong> menyertakan fungsionalitas untuk
+        mencetak informasi debugging, tapi kita harus secara eksplisit
+        opt-in untuk mengaktifkan fungsionalitas itu untuk struct kita.
+        Untuk itu, kita tambahkan outer attribute
+        <code>#[derive(Debug)]</code> persis sebelum definisi struct-nya:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+fn main() {
+    let rect1 = Rectangle {
+        width: 30,
+        height: 50,
+    };
+
+    println!("rect1 is {rect1:?}");
+}</code></pre>
+      <p>Sekarang saat kita jalankan programnya, kita tidak akan dapat error, dan hasilnya:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling rectangles v0.1.0 (file:///projects/rectangles)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.48s
+     Running `target/debug/rectangles`
+rect1 is Rectangle { width: 30, height: 50 }</code></pre>
+      <p>
+        Bagus! Ini bukan output paling cantik, tapi menunjukkan nilai
+        semua field instance ini, yang tentu akan sangat membantu saat
+        debugging. Kalau struct-nya lebih besar, akan berguna punya output
+        yang sedikit lebih mudah dibaca; untuk kasus itu, kita bisa
+        memakai <code>{:#?}</code> alih-alih <code>{:?}</code> di string
+        <code>println!</code>. Di contoh ini, memakai gaya
+        <code>{:#?}</code> akan menghasilkan:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling rectangles v0.1.0 (file:///projects/rectangles)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.48s
+     Running `target/debug/rectangles`
+rect1 is Rectangle {
+    width: 30,
+    height: 50,
+}</code></pre>
+      <p>
+        Cara lain untuk mencetak nilai memakai format <code>Debug</code>
+        adalah memakai macro <code>dbg!</code>, yang mengambil ownership
+        dari sebuah ekspresi (berbeda dari <code>println!</code>, yang
+        mengambil referensi), mencetak nama file dan nomor baris di mana
+        pemanggilan macro <code>dbg!</code> itu terjadi di kodemu beserta
+        nilai hasil ekspresi itu, lalu mengembalikan ownership nilainya.
+      </p>
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ dbg! mencetak ke stderr</p>
+        <p>
+          Memanggil macro <code>dbg!</code> mencetak ke standard error
+          console stream (<code>stderr</code>), berbeda dari
+          <code>println!</code>, yang mencetak ke standard output console
+          stream (<code>stdout</code>). Kita akan bahas lebih lanjut soal
+          <code>stderr</code> dan <code>stdout</code> di subbab 12.6.
+        </p>
+      </div>
+      <p>
+        Berikut contoh di mana kita tertarik pada nilai yang ditetapkan ke
+        field <code>width</code>, sekaligus nilai keseluruhan struct di
+        <code>rect1</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+fn main() {
+    let scale = 2;
+    let rect1 = Rectangle {
+        width: dbg!(30 * scale),
+        height: 50,
+    };
+
+    dbg!(&rect1);
+}</code></pre>
+      <p>
+        Kita bisa membungkus <code>dbg!</code> di sekitar ekspresi
+        <code>30 * scale</code>, dan karena <code>dbg!</code> mengembalikan
+        ownership nilai ekspresinya, field <code>width</code> akan
+        mendapat nilai yang sama seperti kalau kita tidak memanggil
+        <code>dbg!</code> di situ. Kita tidak ingin <code>dbg!</code>
+        mengambil ownership <code>rect1</code>, jadi kita pakai referensi
+        ke <code>rect1</code> di pemanggilan berikutnya. Berikut tampilan
+        outputnya:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling rectangles v0.1.0 (file:///projects/rectangles)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.61s
+     Running `target/debug/rectangles`
+[src/main.rs:10:16] 30 * scale = 60
+[src/main.rs:14:5] &rect1 = Rectangle {
+    width: 60,
+    height: 50,
+}</code></pre>
+      <p>
+        Kita bisa lihat bagian output pertama berasal dari
+        <em>src/main.rs</em> baris 10, tempat kita men-debug ekspresi
+        <code>30 * scale</code>, dan hasilnya adalah <code>60</code>
+        (format <code>Debug</code> untuk integer hanya mencetak nilainya
+        saja). Pemanggilan <code>dbg!</code> di baris 14
+        <em>src/main.rs</em> menampilkan nilai <code>&amp;rect1</code>,
+        yaitu struct <code>Rectangle</code>-nya. Output ini memakai format
+        <code>Debug</code> yang rapi untuk tipe <code>Rectangle</code>.
+        Macro <code>dbg!</code> bisa sangat membantu ketika kamu mencoba
+        mencari tahu apa yang sedang dilakukan kodemu!
+      </p>
+      <p>
+        Selain trait <code>Debug</code>, Rust sudah menyediakan sejumlah
+        trait yang bisa kita pakai dengan attribute <code>derive</code>
+        yang bisa menambahkan perilaku berguna ke tipe custom kita.
+        Trait-trait itu beserta perilakunya terdaftar di Lampiran C. Kita
+        akan bahas cara mengimplementasikan trait ini dengan perilaku
+        custom, serta cara membuat trait-mu sendiri, di Bab 10. Ada juga
+        banyak attribute selain <code>derive</code>; untuk info lebih
+        lanjut, lihat seksi "Attributes" di Rust Reference.
+      </p>
+      <p>
+        Fungsi <code>area</code> kita sangat spesifik: ia hanya menghitung
+        luas persegi panjang. Akan berguna kalau kita mengaitkan perilaku
+        ini lebih erat dengan struct <code>Rectangle</code> kita, karena ia
+        memang tidak akan bekerja untuk tipe lain. Mari lihat bagaimana
+        kita bisa melanjutkan me-refactor kode ini dengan mengubah fungsi
+        <code>area</code> menjadi sebuah <em>method</em> <code>area</code>
+        yang didefinisikan pada tipe <code>Rectangle</code> kita.
+      </p>
+
+      <div class="quiz">
+        <p class="quiz-question">Kenapa <code>println!("{rect1}")</code> gagal untuk struct <code>Rectangle</code> biasa, padahal bekerja untuk <code>i32</code> atau <code>String</code>?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. Placeholder {} memakai trait Display, yang mengasumsikan ada SATU cara jelas menampilkan nilai ke pengguna akhir. Untuk tipe primitif itu jelas, tapi untuk struct custom Rust tidak mau menebak format tampilannya (koma? kurung kurawal? urutan field?) — jadi Display tidak diimplementasikan otomatis." >Placeholder {} memakai trait Display, dan Rust tidak mau menebak format tampilan yang "benar" untuk sebuah struct custom</button>
+          <button class="quiz-option" data-explain="Jumlah field tidak relevan di sini — bahkan struct dengan satu field pun tidak otomatis punya Display." >Karena Rectangle punya lebih dari satu field</button>
+          <button class="quiz-option" data-explain="#[derive(Debug)] justru menyelesaikan masalah ini (untuk placeholder {:?}, bukan {}) — bukan menjadi penyebabnya." >Karena struct Rectangle belum diberi atribut #[derive(Debug)]</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Struct membuat kode lebih jelas dibanding tuple/variabel lepas karena setiap bagian data punya nama.</li>
+          <li><code>#[derive(Debug)]</code> mengaktifkan format <code>{:?}</code> / <code>{:#?}</code> di <code>println!</code> untuk keperluan debugging.</li>
+          <li>Macro <code>dbg!</code> mencetak ke stderr beserta lokasi file:baris, dan mengembalikan ownership nilainya — cocok disisipkan langsung di tengah ekspresi.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

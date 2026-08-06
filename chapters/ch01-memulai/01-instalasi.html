@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.1 Instalasi — Belajar Rust</title>
+<meta name="description" content="Cara menginstal Rust lewat rustup di Windows, Linux, dan macOS, serta cara memastikan instalasinya berhasil.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch01-01">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 1: Memulai</nav>
+    <article>
+      <p class="chapter-label">Bab 1.1</p>
+      <h1>Instalasi</h1>
+
+      <p class="lead">
+        Langkah pertama dalam perjalananmu belajar Rust: menginstal Rust itu
+        sendiri. Kita akan mengunduhnya lewat <code>rustup</code>, alat command
+        line resmi untuk mengelola versi Rust. Kamu butuh koneksi internet untuk
+        proses ini.
+      </p>
+
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Kalau kamu tidak mau pakai rustup</p>
+        <p>
+          Ada cara instalasi lain yang dijelaskan di halaman resmi
+          <a href="https://forge.rust-lang.org/infra/other-installation-methods.html" target="_blank" rel="noopener">Other Rust Installation Methods</a>.
+          Tapi untuk hampir semua orang, <code>rustup</code> adalah pilihan terbaik — dan itu yang akan kita pakai di kursus ini.
+        </p>
+      </div>
+
+      <p>
+        Langkah-langkah di halaman ini akan menginstal versi stabil terbaru dari
+        compiler Rust. Rust punya jaminan stabilitas yang kuat: semua contoh kode
+        di kursus ini yang berhasil dikompilasi hari ini akan tetap berhasil
+        dikompilasi dengan versi Rust yang lebih baru nanti. Output di terminalmu
+        mungkin sedikit berbeda (karena Rust terus memperbaiki pesan error), tapi
+        secara fungsional semuanya akan tetap bekerja seperti yang dijelaskan di sini.
+      </p>
+
+      <div class="callout callout-tip">
+        <p class="callout-title">💡 Cara membaca perintah command line di kursus ini</p>
+        <p>
+          Baris yang harus kamu ketik di terminal selalu diawali tanda <code>$</code>
+          (di Linux/macOS/PowerShell) atau <code>&gt;</code> (di Windows CMD). Kamu
+          <strong>tidak perlu mengetik tanda itu</strong> — itu hanya representasi
+          prompt terminal. Baris yang tidak diawali tanda tersebut biasanya adalah
+          output dari perintah sebelumnya.
+        </p>
+      </div>
+
+      <h2 id="linux-macos">Menginstal rustup di Linux atau macOS</h2>
+      <p>Buka terminal, lalu ketik perintah berikut:</p>
+      <pre><code class="language-shell">$ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh</code></pre>
+      <p>
+        Perintah ini mengunduh sebuah script dan langsung menjalankan instalasi
+        <code>rustup</code>, yang kemudian menginstal versi stabil terbaru Rust.
+        Kamu mungkin akan diminta memasukkan password. Kalau instalasi berhasil,
+        kamu akan melihat pesan berikut:
+      </p>
+      <pre><code class="language-text">Rust is installed now. Great!</code></pre>
+
+      <p>
+        Kamu juga akan butuh sebuah <strong>linker</strong> — program yang
+        dipakai Rust untuk menggabungkan hasil kompilasi menjadi satu file
+        executable. Kemungkinan besar linker sudah terpasang di sistemmu. Kalau
+        muncul error terkait linker, install compiler C (biasanya sudah termasuk
+        linker di dalamnya). Compiler C juga berguna karena beberapa package Rust
+        yang populer bergantung pada kode C.
+      </p>
+      <p>Di macOS, kamu bisa mendapatkan compiler C dengan menjalankan:</p>
+      <pre><code class="language-shell">$ xcode-select --install</code></pre>
+      <p>
+        Di Linux, install GCC atau Clang sesuai dokumentasi distronya. Misalnya
+        di Ubuntu, install package <code>build-essential</code>.
+      </p>
+
+      <h2 id="windows">Menginstal rustup di Windows</h2>
+      <p>
+        Di Windows, buka
+        <a href="https://www.rust-lang.org/tools/install" target="_blank" rel="noopener">rust-lang.org/tools/install</a>
+        dan ikuti instruksinya. Di suatu titik proses instalasi, kamu akan
+        diminta menginstal Visual Studio — ini menyediakan linker dan native
+        library yang dibutuhkan untuk mengompilasi program Rust di Windows.
+      </p>
+      <p>
+        Sisa perintah di kursus ini bisa dijalankan baik di <em>cmd.exe</em>
+        maupun PowerShell. Kalau ada perbedaan penting, akan dijelaskan secara
+        spesifik.
+      </p>
+
+      <h2 id="troubleshooting">Memastikan Instalasi Berhasil</h2>
+      <p>Buka terminal/shell baru dan ketik:</p>
+      <pre><code class="language-shell">$ rustc --version</code></pre>
+      <p>Kamu seharusnya melihat nomor versi, commit hash, dan tanggal commit, dengan format seperti ini:</p>
+      <pre><code class="language-text">rustc x.y.z (abcabcabc yyyy-mm-dd)</code></pre>
+      <p>
+        Kalau informasi ini muncul, selamat — Rust berhasil terinstal! Kalau
+        tidak muncul, periksa apakah Rust sudah masuk ke variabel sistem
+        <code>PATH</code>:
+      </p>
+      <ul>
+        <li>Windows CMD: <code>echo %PATH%</code></li>
+        <li>PowerShell: <code>echo $env:Path</code></li>
+        <li>Linux/macOS: <code>echo $PATH</code></li>
+      </ul>
+      <p>
+        Kalau semua sudah benar tapi Rust masih belum terdeteksi, kamu bisa
+        minta bantuan di
+        <a href="https://www.rust-lang.org/community" target="_blank" rel="noopener">halaman komunitas Rust</a>
+        — di sana kamu akan bertemu sesama "Rustacean" (julukan iseng untuk
+        programmer Rust).
+      </p>
+
+      <h2 id="update-uninstall">Update dan Uninstall</h2>
+      <p>Setelah Rust terinstal lewat rustup, meng-update ke versi terbaru sangat mudah:</p>
+      <pre><code class="language-shell">$ rustup update</code></pre>
+      <p>Untuk uninstall Rust dan rustup:</p>
+      <pre><code class="language-shell">$ rustup self uninstall</code></pre>
+
+      <h2 id="dokumentasi-lokal">Membaca Dokumentasi Lokal</h2>
+      <p>
+        Instalasi Rust juga menyertakan salinan lokal dari dokumentasi resminya,
+        supaya kamu bisa membacanya secara offline. Jalankan <code>rustup doc</code>
+        untuk membuka dokumentasi lokal itu di browser.
+      </p>
+      <div class="callout callout-tip">
+        <p class="callout-title">💡 Kebiasaan baik sejak awal</p>
+        <p>
+          Kapan pun kamu menemukan tipe atau fungsi dari standard library dan
+          tidak yakin cara pakainya, buka dokumentasi API-nya. Ini kebiasaan
+          yang akan sering kamu pakai sepanjang karier Rust-mu.
+        </p>
+      </div>
+
+      <h2 id="editor">Text Editor dan IDE</h2>
+      <p>
+        Kursus ini tidak mengasumsikan tools tertentu untuk menulis kode.
+        Hampir semua text editor bisa dipakai! Tapi banyak editor dan IDE punya
+        dukungan bawaan untuk Rust lewat <code>rust-analyzer</code>, yang
+        memberi fitur seperti auto-complete dan deteksi error langsung saat
+        mengetik. Daftar editor yang didukung bisa dilihat di
+        <a href="https://www.rust-lang.org/tools" target="_blank" rel="noopener">halaman tools Rust</a>.
+      </p>
+
+      <h2 id="offline">Bekerja Offline dengan Kursus Ini</h2>
+      <p>
+        Di beberapa contoh nanti, kita akan memakai package Rust di luar
+        standard library. Untuk mengerjakannya kamu butuh koneksi internet,
+        atau bisa mengunduh dependency-nya lebih dulu supaya bisa dipakai
+        offline nanti (istilah <code>cargo</code> dan perintah-perintah di
+        bawah akan dijelaskan lebih detail di subbab berikutnya):
+      </p>
+      <pre><code class="language-shell">$ cargo new get-dependencies
+$ cd get-dependencies
+$ cargo add rand@0.10.1 trpl@0.2.0</code></pre>
+      <p>
+        Perintah ini akan meng-cache package tersebut supaya tidak perlu
+        diunduh ulang nanti. Setelah dijalankan, folder <code>get-dependencies</code>
+        boleh dihapus. Selanjutnya kamu bisa memakai flag <code>--offline</code>
+        pada semua perintah <code>cargo</code> agar memakai cache ini alih-alih
+        mencoba mengakses internet.
+      </p>
+
+      <div class="quiz">
+        <p class="quiz-question">Kenapa Rust butuh sebuah "linker" untuk mengompilasi program?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Linker bukan alat untuk memformat kode — itu tugas rustfmt.">Untuk memformat kode Rust secara otomatis</button>
+          <button class="quiz-option" data-correct="true" data-explain="Persis. rustc mengubah kode Rust menjadi object code, lalu linker menyatukan potongan-potongan itu (termasuk pustaka yang dibutuhkan) menjadi satu file executable.">Untuk menggabungkan hasil kompilasi menjadi satu file executable</button>
+          <button class="quiz-option" data-explain="Mengunduh package adalah tugas Cargo, bukan linker.">Untuk mengunduh dependency dari internet</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Rust diinstal lewat <code>rustup</code>, alat resmi pengelola versi Rust.</li>
+          <li>Rust butuh linker (biasanya sudah ada, atau ikut terpasang bersama compiler C).</li>
+          <li>Cek instalasi dengan <code>rustc --version</code>.</li>
+          <li><code>rustup update</code> untuk update, <code>rustup self uninstall</code> untuk uninstall.</li>
+          <li><code>rustup doc</code> membuka dokumentasi resmi secara offline di browser.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

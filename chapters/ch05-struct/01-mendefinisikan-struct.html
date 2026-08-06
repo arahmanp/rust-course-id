@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5.1 Mendefinisikan dan Membuat Instance Struct — Belajar Rust</title>
+<meta name="description" content="Cara mendefinisikan struct, membuat instance, field init shorthand, struct update syntax, tuple struct, dan unit-like struct.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch05-01">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 5: Struct</nav>
+    <article>
+      <p class="chapter-label">Bab 5.1</p>
+      <h1>Mendefinisikan dan Membuat Instance Struct</h1>
+
+      <p class="lead">
+        <strong>Struct</strong> mirip dengan tuple yang kita bahas di subbab
+        3.2, dalam artian keduanya menampung banyak nilai yang saling
+        terkait. Seperti tuple, bagian-bagian dalam struct bisa bertipe
+        berbeda-beda. Berbeda dari tuple, di struct kamu memberi nama pada
+        setiap bagian datanya, sehingga jelas apa makna nilai-nilai itu.
+        Menambahkan nama-nama ini membuat struct lebih fleksibel daripada
+        tuple: kamu tidak perlu bergantung pada urutan data untuk
+        menentukan atau mengakses nilai sebuah instance.
+      </p>
+      <p>
+        Untuk mendefinisikan sebuah struct, kita ketik keyword
+        <code>struct</code> dan beri nama seluruh struct-nya. Nama struct
+        harus menggambarkan makna dari data-data yang dikelompokkan
+        bersama. Lalu, di dalam kurung kurawal, kita definisikan nama dan
+        tipe data-data itu, yang kita sebut <strong>field</strong>.
+        Misalnya, berikut struct yang menyimpan informasi akun pengguna:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">struct User {
+    active: bool,
+    username: String,
+    email: String,
+    sign_in_count: u64,
+}</code></pre>
+      <p>
+        Untuk memakai struct setelah kita mendefinisikannya, kita buat
+        sebuah <strong>instance</strong> dari struct itu dengan menentukan
+        nilai konkret untuk setiap field-nya. Kita membuat instance dengan
+        menyebutkan nama struct-nya, lalu menambahkan kurung kurawal berisi
+        pasangan <code>key: value</code>, di mana key-nya adalah nama
+        field dan value-nya adalah data yang ingin kita simpan di field
+        itu. Kita tidak harus menentukan field dengan urutan yang sama
+        seperti saat kita mendeklarasikannya di struct-nya. Dengan kata
+        lain, definisi struct itu seperti sebuah template umum untuk
+        tipenya, dan instance-instance mengisi template itu dengan data
+        tertentu untuk membuat nilai bertipe itu. Misalnya, kita bisa
+        mendeklarasikan seorang pengguna tertentu seperti ini:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let user1 = User {
+        active: true,
+        username: String::from("someusername123"),
+        email: String::from("someone@example.com"),
+        sign_in_count: 1,
+    };
+}</code></pre>
+      <p>
+        Untuk mendapatkan sebuah nilai tertentu dari struct, kita memakai
+        notasi titik. Misalnya, untuk mengakses alamat email pengguna ini,
+        kita pakai <code>user1.email</code>. Kalau instance-nya mutable,
+        kita bisa mengubah sebuah nilai dengan notasi titik dan
+        menetapkannya ke field tertentu. Berikut cara mengubah nilai field
+        <code>email</code> dari instance <code>User</code> yang mutable:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let mut user1 = User {
+        active: true,
+        username: String::from("someusername123"),
+        email: String::from("someone@example.com"),
+        sign_in_count: 1,
+    };
+
+    user1.email = String::from("anotheremail@example.com");
+}</code></pre>
+      <div class="callout callout-warning">
+        <p class="callout-title">⚠️ Seluruh instance harus mutable</p>
+        <p>
+          Perhatikan seluruh instance-nya harus mutable; Rust tidak
+          mengizinkan kita menandai hanya field tertentu saja sebagai
+          mutable.
+        </p>
+      </div>
+      <p>
+        Seperti ekspresi lainnya, kita bisa membuat instance baru dari
+        struct sebagai ekspresi terakhir di badan fungsi untuk secara
+        implisit mengembalikan instance baru itu.
+      </p>
+      <p>
+        Berikut fungsi <code>build_user</code> yang mengembalikan sebuah
+        instance <code>User</code> dengan email dan username yang
+        diberikan. Field <code>active</code> mendapat nilai <code>true</code>,
+        dan <code>sign_in_count</code> mendapat nilai <code>1</code>.
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn build_user(email: String, username: String) -> User {
+    User {
+        active: true,
+        username: username,
+        email: email,
+        sign_in_count: 1,
+    }
+}</code></pre>
+      <p>
+        Masuk akal memberi nama parameter fungsi sama seperti nama field
+        struct-nya, tapi harus mengulang nama field <code>email</code> dan
+        <code>username</code> beserta variabelnya sedikit merepotkan. Kalau
+        struct-nya punya lebih banyak field, mengulang setiap nama akan
+        makin menjengkelkan. Untungnya, ada singkatan yang praktis!
+      </p>
+
+      <h2 id="field-init-shorthand">Memakai Field Init Shorthand</h2>
+      <p>
+        Karena nama parameter dan nama field struct-nya persis sama di
+        contoh sebelumnya, kita bisa memakai sintaks <strong>field init
+        shorthand</strong> untuk menulis ulang <code>build_user</code>
+        supaya perilakunya persis sama tapi tanpa pengulangan
+        <code>username</code> dan <code>email</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn build_user(email: String, username: String) -> User {
+    User {
+        active: true,
+        username,
+        email,
+        sign_in_count: 1,
+    }
+}</code></pre>
+      <p>
+        Di sini, kita membuat instance baru dari struct <code>User</code>,
+        yang punya field bernama <code>email</code>. Kita ingin men-set
+        nilai field <code>email</code> ke nilai parameter <code>email</code>
+        di fungsi <code>build_user</code>. Karena field <code>email</code>
+        dan parameter <code>email</code> punya nama yang sama, kita cukup
+        menulis <code>email</code>, bukan <code>email: email</code>.
+      </p>
+
+      <h2 id="struct-update">Membuat Instance dengan Struct Update Syntax</h2>
+      <p>
+        Sering kali berguna untuk membuat instance baru dari sebuah struct
+        yang menyertakan sebagian besar nilai dari instance lain bertipe
+        sama, tapi mengubah sebagian nilainya. Kamu bisa melakukan ini
+        memakai <strong>struct update syntax</strong>.
+      </p>
+      <p>
+        Pertama, berikut cara membuat instance <code>User</code> baru di
+        <code>user2</code> dengan cara biasa, tanpa update syntax. Kita
+        set nilai baru untuk <code>email</code> tapi selebihnya memakai
+        nilai yang sama dari <code>user1</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">let user2 = User {
+    active: user1.active,
+    username: user1.username,
+    email: String::from("another@example.com"),
+    sign_in_count: user1.sign_in_count,
+};</code></pre>
+      <p>
+        Memakai struct update syntax, kita bisa mencapai efek yang sama
+        dengan kode lebih sedikit. Sintaks <code>..</code> menentukan bahwa
+        field-field yang tersisa dan tidak diset secara eksplisit akan
+        punya nilai sama seperti field di instance yang diberikan.
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">let user2 = User {
+    email: String::from("another@example.com"),
+    ..user1
+};</code></pre>
+      <p>
+        Kode ini juga membuat instance di <code>user2</code> yang punya
+        nilai berbeda untuk <code>email</code> tapi nilai yang sama untuk
+        field <code>username</code>, <code>active</code>, dan
+        <code>sign_in_count</code> dari <code>user1</code>. Bagian
+        <code>..user1</code> harus diletakkan paling akhir untuk
+        menentukan bahwa field-field yang tersisa harus mengambil nilainya
+        dari field yang sesuai di <code>user1</code>, tapi kita bisa
+        memilih menentukan nilai untuk sebanyak apa pun field, dengan
+        urutan apa pun, terlepas dari urutan field di definisi struct-nya.
+      </p>
+      <div class="callout callout-warning">
+        <p class="callout-title">⚠️ Struct update syntax memakai move</p>
+        <p>
+          Perhatikan struct update syntax memakai <code>=</code> seperti
+          assignment; ini karena ia memindahkan (move) datanya, sama
+          seperti yang kita lihat di subbab 4.1 (Variabel dan Data
+          Berinteraksi lewat Move). Di contoh ini, kita sudah tidak bisa
+          lagi memakai <code>user1</code> setelah membuat <code>user2</code>
+          karena <code>String</code> di field <code>username</code> milik
+          <code>user1</code> sudah di-move ke <code>user2</code>. Kalau
+          kita memberi <code>user2</code> nilai <code>String</code> baru
+          untuk <code>email</code> maupun <code>username</code>, sehingga
+          hanya memakai nilai <code>active</code> dan
+          <code>sign_in_count</code> dari <code>user1</code>, maka
+          <code>user1</code> akan tetap valid setelah <code>user2</code>
+          dibuat. Baik <code>active</code> maupun <code>sign_in_count</code>
+          adalah tipe yang mengimplementasikan trait <code>Copy</code>,
+          jadi perilaku yang kita bahas di subbab 4.1 (Data Stack Saja:
+          Trait Copy) berlaku di sini. Kita juga masih bisa memakai
+          <code>user1.email</code> di contoh ini, karena nilainya tidak
+          ikut di-move keluar dari <code>user1</code>.
+        </p>
+      </div>
+
+      <h2 id="tuple-struct">Membuat Tipe Berbeda dengan Tuple Struct</h2>
+      <p>
+        Rust juga mendukung struct yang terlihat mirip tuple, disebut
+        <strong>tuple struct</strong>. Tuple struct punya makna tambahan
+        yang diberikan nama struct-nya, tapi tidak punya nama yang
+        terasosiasi dengan field-fieldnya — field-fieldnya hanya punya
+        tipe. Tuple struct berguna ketika kamu ingin memberi nama pada
+        seluruh tuple dan menjadikan tuple itu tipe yang berbeda dari
+        tuple lain, dan ketika memberi nama tiap field seperti struct
+        biasa akan terasa bertele-tele atau redundan.
+      </p>
+      <p>
+        Untuk mendefinisikan tuple struct, mulai dengan keyword
+        <code>struct</code> dan nama struct-nya diikuti tipe-tipe di dalam
+        tuple-nya. Misalnya, berikut kita definisikan dan pakai dua tuple
+        struct bernama <code>Color</code> dan <code>Point</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">struct Color(i32, i32, i32);
+struct Point(i32, i32, i32);
+
+fn main() {
+    let black = Color(0, 0, 0);
+    let origin = Point(0, 0, 0);
+}</code></pre>
+      <p>
+        Perhatikan nilai <code>black</code> dan <code>origin</code>
+        bertipe berbeda, karena keduanya instance dari tuple struct yang
+        berbeda. Setiap struct yang kamu definisikan adalah tipenya
+        sendiri, walaupun field-field di dalam struct itu mungkin bertipe
+        sama. Misalnya, sebuah fungsi yang menerima parameter bertipe
+        <code>Color</code> tidak bisa menerima <code>Point</code> sebagai
+        argumen, walaupun kedua tipe itu sama-sama tersusun dari tiga
+        nilai <code>i32</code>. Selebihnya, instance tuple struct mirip
+        tuple biasa — kamu bisa men-destructure-nya menjadi
+        bagian-bagiannya, dan bisa memakai <code>.</code> diikuti indeks
+        untuk mengakses nilai tertentu. Berbeda dari tuple, tuple struct
+        mengharuskanmu menyebut nama tipe struct-nya saat men-destructure.
+        Misalnya, kita akan menulis <code>let Point(x, y, z) = origin;</code>
+        untuk men-destructure nilai di <code>origin</code> menjadi
+        variabel <code>x</code>, <code>y</code>, dan <code>z</code>.
+      </p>
+
+      <h2 id="unit-like-struct">Mendefinisikan Unit-Like Struct</h2>
+      <p>
+        Kamu juga bisa mendefinisikan struct yang tidak punya field sama
+        sekali! Ini disebut <strong>unit-like struct</strong> karena
+        perilakunya mirip <code>()</code>, tipe unit yang kita bahas di
+        subbab 3.2. Unit-like struct bisa berguna ketika kamu perlu
+        mengimplementasikan sebuah trait pada suatu tipe tapi tidak punya
+        data apa pun yang ingin kamu simpan di tipe itu sendiri. Kita akan
+        bahas trait di Bab 10. Berikut contoh mendeklarasikan dan membuat
+        instance unit struct bernama <code>AlwaysEqual</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">struct AlwaysEqual;
+
+fn main() {
+    let subject = AlwaysEqual;
+}</code></pre>
+      <p>
+        Untuk mendefinisikan <code>AlwaysEqual</code>, kita pakai keyword
+        <code>struct</code>, nama yang kita inginkan, lalu titik koma.
+        Tidak perlu kurung kurawal atau kurung biasa! Lalu, kita bisa
+        mendapat instance <code>AlwaysEqual</code> di variabel
+        <code>subject</code> dengan cara serupa: memakai nama yang sudah
+        kita definisikan, tanpa kurung kurawal atau kurung biasa apa pun.
+        Bayangkan nanti kita akan mengimplementasikan perilaku untuk tipe
+        ini sehingga setiap instance <code>AlwaysEqual</code> selalu sama
+        dengan instance dari tipe apa pun lainnya, mungkin untuk mendapat
+        hasil yang sudah diketahui untuk keperluan testing. Kita tidak
+        akan butuh data apa pun untuk mengimplementasikan perilaku itu!
+        Kamu akan lihat di Bab 10 cara mendefinisikan trait dan
+        mengimplementasikannya pada tipe apa pun, termasuk unit-like
+        struct.
+      </p>
+
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Ownership Data Struct</p>
+        <p>
+          Di definisi struct <code>User</code> sebelumnya, kita memakai
+          tipe <code>String</code> yang owned, bukan tipe string slice
+          <code>&amp;str</code>. Ini pilihan yang disengaja karena kita
+          ingin setiap instance struct ini memiliki (own) seluruh datanya
+          sendiri, dan data itu valid selama seluruh struct-nya valid.
+        </p>
+        <p>
+          Struct juga bisa menyimpan referensi ke data yang dimiliki
+          sesuatu yang lain, tapi untuk itu dibutuhkan <strong>lifetime</strong>,
+          sebuah fitur Rust yang akan kita bahas di Bab 10. Lifetime
+          memastikan data yang direferensikan sebuah struct tetap valid
+          selama struct itu valid. Misalkan kamu coba menyimpan sebuah
+          referensi dalam struct tanpa menentukan lifetime, seperti
+          berikut — ini tidak akan bekerja:
+        </p>
+        <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+        <pre><code class="language-rust">struct User {
+    active: bool,
+    username: &str,
+    email: &str,
+    sign_in_count: u64,
+}
+
+fn main() {
+    let user1 = User {
+        active: true,
+        username: "someusername123",
+        email: "someone@example.com",
+        sign_in_count: 1,
+    };
+}</code></pre>
+        <p>Compiler akan mengeluh butuh lifetime specifier:</p>
+        <pre><code class="language-text">$ cargo run
+   Compiling structs v0.1.0 (file:///projects/structs)
+error[E0106]: missing lifetime specifier
+ --> src/main.rs:3:15
+  |
+3 |     username: &str,
+  |               ^ expected named lifetime parameter
+  |
+help: consider introducing a named lifetime parameter
+  |
+1 ~ struct User<'a> {
+2 |     active: bool,
+3 ~     username: &'a str,
+  |
+
+error[E0106]: missing lifetime specifier
+ --> src/main.rs:4:12
+  |
+4 |     email: &str,
+  |            ^ expected named lifetime parameter
+  |
+help: consider introducing a named lifetime parameter
+  |
+1 ~ struct User<'a> {
+2 |     active: bool,
+3 |     username: &str,
+4 ~     email: &'a str,
+  |
+
+For more information about this error, try `rustc --explain E0106`.
+error: could not compile `structs` (bin "structs") due to 2 previous errors</code></pre>
+        <p>
+          Di Bab 10, kita akan bahas cara memperbaiki error ini supaya
+          kamu bisa menyimpan referensi di dalam struct, tapi untuk
+          sekarang, kita akan memperbaiki error semacam ini dengan
+          memakai tipe owned seperti <code>String</code>, bukan referensi
+          seperti <code>&amp;str</code>.
+        </p>
+      </div>
+
+      <div class="quiz">
+        <p class="quiz-question">Kenapa <code>let user2 = User { email: String::from("..."), ..user1 };</code> membuat <code>user1</code> tidak valid lagi setelahnya?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Struct update syntax justru sepenuhnya valid dan sering dipakai — bukan itu masalahnya di sini." >Karena struct update syntax (..user1) tidak valid secara sintaks di Rust</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. ..user1 menyalin field-field yang tidak disebutkan secara eksplisit dari user1 — termasuk field username yang bertipe String (tidak mengimplementasikan Copy). Karena itu, nilai String di username di-MOVE ke user2, membuat user1 tidak valid lagi secara keseluruhan (walau field seperti active/sign_in_count yang Copy sebenarnya masih bisa diakses lewat user1 sendiri).">Field username bertipe String tidak mengimplementasikan trait Copy, sehingga nilainya di-move dari user1 ke user2</button>
+          <button class="quiz-option" data-explain="Bukan panjang struct-nya yang jadi masalah — ini soal tipe field mana yang Copy dan mana yang di-move." >Karena struct User punya lebih dari 3 field</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Struct mengelompokkan data terkait dengan memberi nama pada setiap field — lebih jelas daripada tuple.</li>
+          <li>Field init shorthand: kalau nama parameter/variabel sama dengan nama field, cukup tulis <code>field</code> alih-alih <code>field: field</code>.</li>
+          <li>Struct update syntax <code>..instance_lama</code> mengisi field yang tidak disebutkan dari instance lain — bisa memicu move pada field yang bukan Copy.</li>
+          <li>Tuple struct (<code>struct Color(i32, i32, i32);</code>) memberi nama tipe pada tuple tanpa menamai field-nya.</li>
+          <li>Unit-like struct (<code>struct AlwaysEqual;</code>) tidak punya field sama sekali — berguna untuk mengimplementasikan trait tanpa data.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

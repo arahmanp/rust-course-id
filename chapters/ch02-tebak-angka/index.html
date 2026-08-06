@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 2: Membuat Permainan Tebak Angka — Belajar Rust</title>
+<meta name="description" content="Proyek praktik pertama: membangun game tebak angka dari nol sambil berkenalan dengan let, match, Result, crate eksternal, dan loop.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch02-00">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a></nav>
+    <article>
+      <p class="chapter-label">Bab 2</p>
+      <h1>Membuat Permainan Tebak Angka</h1>
+
+      <p class="lead">
+        Mari langsung terjun ke Rust dengan mengerjakan sebuah proyek bareng-bareng!
+        Bab ini memperkenalkan beberapa konsep umum Rust dengan menunjukkan cara
+        memakainya dalam program nyata. Kamu akan belajar tentang <code>let</code>,
+        <code>match</code>, method, associated function, crate eksternal, dan
+        banyak lagi! Di bab-bab selanjutnya, kita akan membahas ide-ide ini lebih
+        mendalam — di bab ini, kamu cukup mempraktikkan dasar-dasarnya dulu.
+      </p>
+
+      <p>
+        Kita akan membuat masalah pemrograman klasik untuk pemula: permainan
+        tebak angka. Begini cara kerjanya — program akan membuat sebuah angka
+        acak antara 1 dan 100. Program lalu meminta pemain memasukkan
+        tebakan. Setelah tebakan dimasukkan, program akan memberi tahu apakah
+        tebakan itu terlalu rendah atau terlalu tinggi. Kalau tebakannya
+        benar, permainan mencetak pesan selamat dan berhenti.
+
+      </p>
+
+      <h2 id="setup">Menyiapkan Proyek Baru</h2>
+      <p>
+        Masuk ke folder <code>projects</code> yang kamu buat di Bab 1, lalu buat
+        proyek baru dengan Cargo:
+      </p>
+      <pre><code class="language-shell">$ cargo new guessing_game
+$ cd guessing_game</code></pre>
+      <p>
+        Perintah pertama, <code>cargo new</code>, menerima nama proyek
+        (<code>guessing_game</code>) sebagai argumen pertama. Perintah kedua
+        berpindah ke folder proyek yang baru dibuat.
+      </p>
+      <p>Lihat file <code>Cargo.toml</code> yang dihasilkan:</p>
+      <p class="filename-label">Nama berkas: Cargo.toml</p>
+      <pre><code class="language-toml">[package]
+name = "guessing_game"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]</code></pre>
+      <p>
+        Seperti yang kamu lihat di Bab 1, <code>cargo new</code> menghasilkan
+        program "Hello, world!" untukmu. Lihat file <code>src/main.rs</code>-nya:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    println!("Hello, world!");
+}</code></pre>
+      <p>
+        Sekarang kompilasi dan jalankan program "Hello, world!" ini sekaligus
+        dengan perintah <code>cargo run</code>:
+      </p>
+      <pre><code class="language-shell">$ cargo run
+   Compiling guessing_game v0.1.0 (file:///projects/guessing_game)
+    Finished dev [unoptimized + debuginfo] target(s) in 1.50s
+     Running `target/debug/guessing_game`
+Hello, world!</code></pre>
+      <p>
+        Perintah <code>run</code> sangat berguna ketika kamu butuh iterasi
+        cepat pada sebuah proyek, seperti yang akan sering kita lakukan di
+        game ini — menguji tiap perubahan kecil sebelum lanjut ke langkah
+        berikutnya.
+      </p>
+      <p>Buka lagi file <code>src/main.rs</code>. Kita akan menulis semua kode di file ini.</p>
+
+      <h2 id="memproses-tebakan">Memproses Sebuah Tebakan</h2>
+      <p>
+        Bagian pertama program tebak angka akan meminta input pengguna,
+        memproses input itu, dan memastikan bentuknya sesuai yang diharapkan.
+        Untuk memulai, kita izinkan pemain memasukkan sebuah tebakan.
+        Ketikkan kode berikut ke <code>src/main.rs</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">use std::io;
+
+fn main() {
+    println!("Tebak angkanya!");
+
+    println!("Silakan masukkan tebakanmu.");
+
+    let mut guess = String::new();
+
+    io::stdin()
+        .read_line(&mut guess)
+        .expect("Gagal membaca baris input");
+
+    println!("Kamu menebak: {guess}");
+}</code></pre>
+      <p>
+        Kode ini padat informasi, jadi mari kita bahas baris demi baris.
+        Untuk mendapatkan input pengguna lalu mencetak hasilnya sebagai
+        output, kita perlu membawa pustaka input/output <code>io</code> ke
+        dalam scope. Pustaka <code>io</code> berasal dari standard library,
+        yang dikenal sebagai <code>std</code>:
+      </p>
+      <pre><code class="language-rust">use std::io;</code></pre>
+
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Apa itu "prelude"?</p>
+        <p>
+          Secara default, Rust punya sekumpulan item dari standard library
+          yang otomatis dibawa ke scope setiap program — kumpulan ini disebut
+          <em>prelude</em>. Kalau sebuah tipe yang ingin kamu pakai tidak ada
+          di prelude, kamu harus membawanya ke scope secara eksplisit dengan
+          pernyataan <code>use</code>, seperti <code>std::io</code> di atas —
+          yang memberi kita berbagai fitur berguna, termasuk kemampuan
+          menerima input pengguna.
+        </p>
+      </div>
+
+      <p>Seperti yang kamu lihat di Bab 1, fungsi <code>main</code> adalah titik masuk program:</p>
+      <pre><code class="language-rust">fn main() {</code></pre>
+      <p>
+        Sintaks <code>fn</code> mendeklarasikan fungsi baru; tanda kurung
+        <code>()</code> menandakan tidak ada parameter; dan kurung kurawal
+        <code>{</code> membuka badan fungsi.
+      </p>
+      <p>Seperti juga sudah kamu pelajari, <code>println!</code> adalah macro yang mencetak string ke layar:</p>
+      <pre><code class="language-rust">println!("Tebak angkanya!");
+
+println!("Silakan masukkan tebakanmu.");</code></pre>
+      <p>Kode ini mencetak sapaan tentang permainannya dan meminta input dari pengguna.</p>
+
+      <h3 id="menyimpan-nilai">Menyimpan Nilai dengan Variabel</h3>
+      <p>Selanjutnya, kita membuat sebuah <em>variabel</em> untuk menyimpan input pengguna:</p>
+      <pre><code class="language-rust">let mut guess = String::new();</code></pre>
+      <p>
+        Sekarang program ini mulai menarik! Banyak hal terjadi di baris kecil
+        ini. Kita memakai pernyataan <code>let</code> untuk membuat variabel.
+        Contoh lain:
+      </p>
+      <pre><code class="language-rust">let apples = 5;</code></pre>
+      <p>
+        Baris ini membuat variabel baru bernama <code>apples</code> dan
+        mengikatnya (<em>bind</em>) ke nilai <code>5</code>. Di Rust,
+        variabel bersifat <strong>immutable</strong> (tidak bisa diubah)
+        secara default — begitu sebuah variabel diberi nilai, nilai itu tidak
+        akan berubah. Konsep ini akan kita bahas mendalam di subbab
+        "Variabel dan Mutabilitas" Bab 3. Untuk membuat variabel
+        <strong>mutable</strong> (bisa diubah), kita tambahkan <code>mut</code>
+        sebelum nama variabelnya:
+      </p>
+      <pre><code class="language-rust">let apples = 5; // immutable
+let mut bananas = 5; // mutable</code></pre>
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Komentar di Rust</p>
+        <p>
+          Sintaks <code>//</code> memulai sebuah komentar yang berlanjut
+          sampai akhir baris. Rust mengabaikan semua isi komentar. Kita akan
+          bahas komentar lebih detail di subbab 3.4.
+        </p>
+      </div>
+      <p>
+        Kembali ke program tebak angka kita — sekarang kamu tahu bahwa
+        <code>let mut guess</code> memperkenalkan sebuah variabel mutable
+        bernama <code>guess</code>. Tanda sama dengan (<code>=</code>)
+        memberi tahu Rust bahwa kita ingin mengikat sesuatu ke variabel ini
+        sekarang. Di sebelah kanan tanda sama dengan adalah nilai yang
+        diikat ke <code>guess</code>, yaitu hasil pemanggilan
+        <code>String::new</code>, sebuah fungsi yang mengembalikan instance
+        baru dari <code>String</code>. <code>String</code> adalah tipe
+        string dari standard library yang bisa bertambah panjang
+        (<em>growable</em>) dan berformat teks UTF-8.
+      </p>
+      <p>
+        Sintaks <code>::</code> pada <code>::new</code> menandakan bahwa
+        <code>new</code> adalah <strong>associated function</strong> dari
+        tipe <code>String</code>. Associated function adalah fungsi yang
+        diimplementasikan pada sebuah tipe, dalam hal ini <code>String</code>.
+        Fungsi <code>new</code> ini membuat string baru yang kosong. Kamu
+        akan menemukan fungsi <code>new</code> di banyak tipe lain karena ini
+        nama yang umum dipakai untuk fungsi yang membuat nilai baru dari
+        suatu jenis.
+      </p>
+      <p>
+        Secara keseluruhan, baris <code>let mut guess = String::new();</code>
+        membuat sebuah variabel mutable yang saat ini terikat ke instance
+        <code>String</code> baru yang kosong. Fiuh!
+      </p>
+
+      <h3 id="menerima-input">Menerima Input Pengguna</h3>
+      <p>
+        Ingat kita sudah membawa fungsionalitas input/output dari standard
+        library lewat <code>use std::io;</code> di baris pertama program.
+        Sekarang kita panggil fungsi <code>stdin</code> dari modul
+        <code>io</code>, yang memungkinkan kita menangani input pengguna:
+      </p>
+      <pre><code class="language-rust">io::stdin()
+    .read_line(&mut guess)</code></pre>
+      <p>
+        Kalau kita tidak meng-import modul <code>io</code> lewat
+        <code>use std::io;</code> di awal program, kita tetap bisa memakai
+        fungsi ini dengan menulisnya sebagai <code>std::io::stdin</code>.
+        Fungsi <code>stdin</code> mengembalikan instance dari
+        <code>std::io::Stdin</code>, sebuah tipe yang merepresentasikan
+        handle ke standard input terminal-mu.
+      </p>
+      <p>
+        Selanjutnya, baris <code>.read_line(&amp;mut guess)</code> memanggil
+        method <code>read_line</code> pada handle standard input untuk
+        mendapatkan input dari pengguna. Kita juga mengoper
+        <code>&amp;mut guess</code> sebagai argumen ke <code>read_line</code>
+        untuk memberi tahu string mana yang akan dipakai menyimpan input
+        pengguna. Tugas lengkap <code>read_line</code> adalah mengambil apa
+        pun yang diketik pengguna ke standard input dan menambahkannya
+        (<em>append</em>) ke sebuah string (tanpa menimpa isinya), sehingga
+        kita mengoper string itu sebagai argumen. Argumen string ini harus
+        mutable supaya method-nya bisa mengubah isi string tersebut.
+      </p>
+      <p>
+        Tanda <code>&amp;</code> menandakan bahwa argumen ini adalah sebuah
+        <strong>referensi</strong>, yang memberi cara bagi beberapa bagian
+        kodemu untuk mengakses satu data yang sama tanpa perlu menyalin data
+        itu berkali-kali ke memori. Referensi adalah fitur yang cukup
+        kompleks, dan salah satu keunggulan utama Rust adalah betapa aman
+        dan mudahnya memakai referensi. Kamu belum perlu tahu detailnya
+        untuk menyelesaikan program ini — untuk sekarang, cukup tahu bahwa
+        seperti variabel, referensi juga immutable secara default. Karena
+        itu kita menulis <code>&amp;mut guess</code>, bukan <code>&amp;guess</code>,
+        supaya bisa diubah. (Bab 4 akan menjelaskan referensi lebih mendalam.)
+      </p>
+
+      <h3 id="result">Menangani Kemungkinan Gagal dengan Result</h3>
+      <p>Kita masih membahas baris kode yang sama — bagian selanjutnya adalah method ini:</p>
+      <pre><code class="language-rust">.expect("Gagal membaca baris input");</code></pre>
+      <p>
+        Kita bisa saja menulis kode ini sebagai satu baris panjang:
+        <code>io::stdin().read_line(&amp;mut guess).expect("Gagal membaca baris input");</code>
+        — tapi satu baris yang terlalu panjang sulit dibaca, jadi lebih baik
+        dipecah. Menyisipkan baris baru untuk memecah pemanggilan method
+        ber-rantai (<code>.method_name()</code>) adalah kebiasaan yang wajar.
+      </p>
+      <p>
+        Seperti disebutkan sebelumnya, <code>read_line</code> menaruh apa pun
+        yang dimasukkan pengguna ke string yang kita oper, tapi ia juga
+        mengembalikan nilai <code>Result</code>. <code>Result</code> adalah
+        sebuah <strong>enumeration</strong> (sering disebut <em>enum</em>),
+        yaitu tipe yang bisa berada dalam salah satu dari beberapa
+        kemungkinan keadaan. Setiap kemungkinan keadaan itu kita sebut
+        <strong>variant</strong>.
+      </p>
+      <p>
+        Bab 6 akan membahas enum lebih detail. Tujuan tipe <code>Result</code>
+        ini adalah untuk mengkodekan informasi penanganan error.
+      </p>
+      <p>
+        Variant dari <code>Result</code> adalah <code>Ok</code> dan
+        <code>Err</code>. Variant <code>Ok</code> menandakan operasinya
+        berhasil, dan berisi nilai yang berhasil dihasilkan. Variant
+        <code>Err</code> berarti operasinya gagal, dan berisi informasi
+        tentang bagaimana atau kenapa operasi itu gagal.
+      </p>
+      <p>
+        Sama seperti nilai dari tipe apa pun, nilai bertipe <code>Result</code>
+        juga punya method yang bisa dipanggil. Instance <code>Result</code>
+        punya method <code>expect</code>. Kalau instance ini adalah nilai
+        <code>Err</code>, <code>expect</code> akan membuat program crash dan
+        menampilkan pesan yang kamu berikan sebagai argumennya. Kalau method
+        <code>read_line</code> mengembalikan <code>Err</code>, kemungkinan
+        besar itu berasal dari error sistem operasi yang mendasarinya. Kalau
+        instance ini adalah nilai <code>Ok</code>, <code>expect</code> akan
+        mengambil nilai yang dibungkus <code>Ok</code> dan mengembalikannya
+        supaya bisa kamu pakai. Dalam kasus ini, nilai tersebut adalah jumlah
+        byte dari input pengguna.
+      </p>
+      <p>Kalau kamu tidak memanggil <code>expect</code>, program tetap akan berhasil dikompilasi, tapi kamu akan mendapat warning:</p>
+      <pre><code class="language-text">$ cargo build
+   Compiling guessing_game v0.1.0 (file:///projects/guessing_game)
+warning: unused `Result` that must be used
+  --> src/main.rs:10:5
+   |
+10 |     io::stdin().read_line(&mut guess);
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: this `Result` may be an `Err` variant, which should be handled
+   = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+   |
+10 |     let _ = io::stdin().read_line(&mut guess);
+   |     +++++++
+
+warning: `guessing_game` (bin "guessing_game") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.59s</code></pre>
+      <p>
+        Rust memperingatkan bahwa kamu belum memakai nilai <code>Result</code>
+        yang dikembalikan <code>read_line</code>, menandakan program belum
+        menangani kemungkinan error.
+      </p>
+      <p>
+        Cara yang benar untuk menghilangkan warning ini adalah benar-benar
+        menulis kode penanganan error, tapi dalam kasus kita, kita memang
+        ingin program ini crash begitu ada masalah, jadi kita pakai
+        <code>expect</code>. Kamu akan belajar cara memulihkan diri dari
+        error di Bab 9.
+      </p>
+
+      <h3 id="placeholder">Mencetak Nilai dengan Placeholder println!</h3>
+      <p>Selain kurung kurawal penutup, hanya ada satu baris lagi yang perlu dibahas:</p>
+      <pre><code class="language-rust">println!("Kamu menebak: {guess}");</code></pre>
+      <p>
+        Baris ini mencetak string yang sekarang berisi input pengguna. Tanda
+        kurung kurawal <code>{}</code> adalah sebuah <em>placeholder</em> —
+        bayangkan <code>{}</code> seperti capit kepiting kecil yang
+        "menjepit" sebuah nilai di tempatnya. Saat mencetak nilai sebuah
+        variabel, nama variabelnya bisa langsung diletakkan di dalam kurung
+        kurawal. Saat mencetak hasil evaluasi sebuah ekspresi, letakkan
+        kurung kurawal kosong di string format-nya, lalu ikuti string format
+        itu dengan daftar ekspresi (dipisah koma) sesuai urutan placeholder-nya.
+        Mencetak sebuah variabel sekaligus hasil ekspresi dalam satu
+        pemanggilan <code>println!</code> akan terlihat seperti ini:
+      </p>
+      <pre><code class="language-rust">let x = 5;
+let y = 10;
+
+println!("x = {x} and y + 2 = {}", y + 2);</code></pre>
+      <p>Kode ini akan mencetak <code>x = 5 and y + 2 = 12</code>.</p>
+
+      <h3 id="test-pertama">Menguji Bagian Pertama</h3>
+      <p>Mari uji bagian pertama permainan tebak angka ini. Jalankan dengan <code>cargo run</code>:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling guessing_game v0.1.0 (file:///projects/guessing_game)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.44s
+     Running `target/debug/guessing_game`
+Tebak angkanya!
+Silakan masukkan tebakanmu.
+6
+Kamu menebak: 6</code></pre>
+      <p>Sejauh ini, bagian pertama game sudah selesai: kita mendapat input dari keyboard lalu mencetaknya.</p>
+
+      <div class="quiz">
+        <p class="quiz-question">Kalau <code>read_line</code> mengembalikan nilai <code>Err</code>, apa yang dilakukan <code>.expect("pesan")</code>?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Justru sebaliknya — expect akan membuat program crash saat menerima Err, bukan mengabaikannya diam-diam.">Mengabaikan error itu dan melanjutkan program seperti biasa</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. expect membuat program panic (crash) dan menampilkan pesan yang kamu berikan sebagai argumen, kalau Result-nya adalah Err.">Membuat program crash (panic) dan menampilkan pesan yang diberikan sebagai argumen</button>
+          <button class="quiz-option" data-explain="expect tidak mencoba lagi secara otomatis — itu bukan perilakunya.">Otomatis mencoba membaca input lagi dari pengguna</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <h2 id="angka-rahasia">Membuat Angka Rahasia</h2>
+      <p>
+        Selanjutnya, kita perlu membuat angka rahasia yang akan ditebak
+        pengguna. Angka rahasia ini harus berbeda setiap kali dimainkan
+        supaya permainannya tetap seru dimainkan berkali-kali. Kita pakai
+        angka acak antara 1 dan 100 supaya permainannya tidak terlalu sulit.
+        Rust belum menyediakan fungsionalitas angka acak di standard
+        library-nya. Tapi tim Rust menyediakan crate
+        <a href="https://crates.io/crates/rand" target="_blank" rel="noopener"><code>rand</code></a>
+        untuk kebutuhan itu.
+      </p>
+
+      <h3 id="crate">Menambah Fungsionalitas dengan Crate</h3>
+      <p>
+        Ingat, crate adalah kumpulan file source code Rust. Proyek yang kita
+        buat sejauh ini adalah <strong>binary crate</strong>, yaitu sesuatu
+        yang bisa dieksekusi. Crate <code>rand</code> adalah
+        <strong>library crate</strong>, yang berisi kode yang dirancang
+        untuk dipakai di program lain dan tidak bisa dieksekusi sendiri.
+      </p>
+      <p>
+        Di sinilah kemampuan Cargo mengoordinasikan crate eksternal benar-benar
+        bersinar. Sebelum bisa memakai <code>rand</code>, kita perlu
+        mengubah file <code>Cargo.toml</code> untuk menyertakan crate
+        <code>rand</code> sebagai dependency. Buka file itu dan tambahkan
+        baris berikut di bawah header <code>[dependencies]</code> yang sudah
+        dibuatkan Cargo. Pastikan menuliskan <code>rand</code> persis seperti
+        ini, dengan nomor versi ini, atau contoh kode di kursus ini mungkin
+        tidak akan bekerja:
+      </p>
+      <p class="filename-label">Nama berkas: Cargo.toml</p>
+      <pre><code class="language-toml">[dependencies]
+rand = "0.10.1"</code></pre>
+      <p>
+        Di file <code>Cargo.toml</code>, semua yang mengikuti sebuah header
+        adalah bagian dari seksi itu sampai seksi lain dimulai. Di
+        <code>[dependencies]</code>, kamu memberi tahu Cargo crate eksternal
+        apa saja yang dibutuhkan proyekmu beserta versinya. Di sini, kita
+        menentukan crate <code>rand</code> dengan spesifikasi versi semantik
+        <code>0.10.1</code>. Cargo memahami
+        <a href="http://semver.org" target="_blank" rel="noopener">Semantic Versioning</a>
+        (sering disebut <em>SemVer</em>) — sebuah standar penulisan nomor
+        versi. Spesifikasi <code>0.10.1</code> sebenarnya singkatan dari
+        <code>^0.10.1</code>, yang artinya versi berapa pun yang minimal
+        0.10.1 tapi di bawah 0.11.0.
+      </p>
+      <p>
+        Cargo menganggap versi-versi tersebut punya public API yang
+        kompatibel dengan versi 0.10.1, dan spesifikasi ini memastikan kamu
+        akan mendapat rilis patch terbaru yang masih bisa dikompilasi dengan
+        kode di bab ini. Versi 0.11.0 ke atas tidak dijamin punya API yang
+        sama seperti yang dipakai contoh-contoh berikut.
+      </p>
+      <p>Sekarang, tanpa mengubah kode apa pun, mari build proyeknya:</p>
+      <pre><code class="language-text">$ cargo build
+    Updating crates.io index
+     Locking 8 packages to latest Rust 1.96.0 compatible versions
+  Downloaded rand_core v0.10.1
+  Downloaded chacha20 v0.10.1
+  Downloaded rand v0.10.1
+  Downloaded 3 crates (162.9KiB) in 0.59s
+   Compiling libc v0.2.186
+   Compiling rand_core v0.10.1
+   Compiling getrandom v0.4.3
+   Compiling cfg-if v1.0.4
+   Compiling chacha20 v0.10.1
+   Compiling rand v0.10.1
+   Compiling guessing_game v0.1.0 (file:///projects/guessing_game)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.03s</code></pre>
+      <p>
+        Kamu mungkin melihat nomor versi berbeda (tapi semuanya tetap
+        kompatibel berkat SemVer!) dan baris yang berbeda (tergantung sistem
+        operasimu), dan urutan barisnya bisa berbeda-beda.
+      </p>
+      <p>
+        Ketika kita menyertakan dependency eksternal, Cargo mengambil versi
+        terbaru dari semua yang dibutuhkan dependency itu dari
+        <strong>registry</strong> — salinan data dari
+        <a href="https://crates.io/" target="_blank" rel="noopener">Crates.io</a>.
+        Crates.io adalah tempat komunitas Rust mempublikasikan proyek open
+        source mereka untuk dipakai orang lain.
+      </p>
+      <p>
+        Setelah meng-update registry, Cargo memeriksa seksi
+        <code>[dependencies]</code> dan mengunduh crate yang terdaftar yang
+        belum ada. Dalam kasus ini, walaupun kita hanya mendaftarkan
+        <code>rand</code>, Cargo juga mengambil crate lain yang dibutuhkan
+        <code>rand</code> supaya bisa bekerja. Setelah semua crate terunduh,
+        Rust mengompilasinya lalu mengompilasi proyek kita bersama semua
+        dependency yang sudah tersedia.
+      </p>
+      <p>
+        Kalau kamu langsung menjalankan <code>cargo build</code> lagi tanpa
+        perubahan apa pun, kamu tidak akan melihat output apa pun selain
+        baris <code>Finished</code>. Cargo tahu ia sudah mengunduh dan
+        mengompilasi dependency-nya, dan kamu belum mengubah apa pun di
+        <code>Cargo.toml</code>. Cargo juga tahu kamu belum mengubah apa pun
+        di kodemu, jadi ia juga tidak mengompilasi ulang kode itu.
+      </p>
+
+      <h4 id="cargo-lock">Memastikan Build yang Reproducible</h4>
+      <p>
+        Cargo punya mekanisme yang memastikan kamu bisa membangun ulang hasil
+        yang sama persis setiap kali kamu atau siapa pun membangun kodemu:
+        Cargo hanya akan memakai versi dependency yang kamu tentukan sampai
+        kamu bilang sebaliknya. Misalnya, minggu depan versi 0.10.2 dari
+        crate <code>rand</code> rilis dengan perbaikan bug penting, tapi juga
+        membawa regresi yang bisa merusak kodemu. Untuk mengatasi ini, Rust
+        membuat file <code>Cargo.lock</code> saat pertama kali kamu
+        menjalankan <code>cargo build</code>.
+      </p>
+      <p>
+        Saat proyek pertama kali di-build, Cargo menentukan semua versi
+        dependency yang sesuai kriteria lalu menuliskannya ke
+        <code>Cargo.lock</code>. Saat kamu build proyek ini di masa depan,
+        Cargo akan melihat file <code>Cargo.lock</code> sudah ada dan
+        memakai versi yang tercatat di sana, tanpa perlu menentukan ulang
+        versi-versi itu dari nol. Ini membuat build-mu otomatis
+        <em>reproducible</em>. Dengan kata lain, proyekmu akan tetap memakai
+        versi 0.10.1 sampai kamu meng-upgrade-nya secara eksplisit. Karena
+        <code>Cargo.lock</code> penting untuk reproducible build, file ini
+        biasanya ikut disertakan di version control bersama kode proyekmu.
+      </p>
+
+      <h4 id="cargo-update">Meng-update Crate ke Versi Baru</h4>
+      <p>
+        Saat kamu benar-benar ingin meng-update sebuah crate, Cargo
+        menyediakan perintah <code>update</code>, yang akan mengabaikan file
+        <code>Cargo.lock</code> dan mencari semua versi terbaru yang sesuai
+        spesifikasi di <code>Cargo.toml</code>. Cargo lalu menuliskan versi
+        itu ke <code>Cargo.lock</code>. Kalau tidak, secara default Cargo
+        hanya akan mencari versi di atas 0.10.1 dan di bawah 0.11.0. Kalau
+        crate <code>rand</code> merilis dua versi baru 0.10.2 dan 0.999.0,
+        menjalankan <code>cargo update</code> akan menampilkan:
+      </p>
+      <pre><code class="language-text">$ cargo update
+    Updating crates.io index
+     Locking 1 package to latest Rust 1.96.0 compatible version
+    Updating rand v0.10.1 -> v0.10.2 (available: v0.999.0)</code></pre>
+      <p>
+        Cargo mengabaikan rilis 0.999.0. Kamu juga akan melihat perubahan di
+        <code>Cargo.lock</code> yang mencatat versi <code>rand</code> yang
+        sekarang dipakai adalah 0.10.2. Untuk memakai <code>rand</code> versi
+        0.999.0, kamu harus mengubah <code>Cargo.toml</code> secara eksplisit
+        (jangan lakukan ini sungguhan — contoh-contoh berikutnya
+        mengasumsikan kamu memakai <code>rand</code> versi 0.10):
+      </p>
+      <pre><code class="language-toml">[dependencies]
+rand = "0.999.0"</code></pre>
+      <p>
+        Cargo membuatnya sangat mudah untuk memakai ulang pustaka orang lain,
+        sehingga Rustacean bisa menulis proyek yang lebih kecil, dirakit dari
+        banyak package. Bab 14 akan membahas Cargo dan ekosistemnya lebih
+        lanjut.
+      </p>
+
+      <h3 id="random-number">Membuat Angka Acak</h3>
+      <p>Mari mulai memakai <code>rand</code> untuk membuat angka yang akan ditebak. Update <code>src/main.rs</code>:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">use std::io;
+
+use rand::prelude::*;
+
+fn main() {
+    println!("Tebak angkanya!");
+
+    let secret_number = rand::rng().random_range(1..=100);
+
+    println!("Angka rahasianya adalah: {secret_number}");
+
+    println!("Silakan masukkan tebakanmu.");
+
+    let mut guess = String::new();
+
+    io::stdin()
+        .read_line(&mut guess)
+        .expect("Gagal membaca baris input");
+
+    println!("Kamu menebak: {guess}");
+}</code></pre>
+      <p>
+        Pertama, kita tambahkan baris <code>use rand::prelude::*;</code>.
+        Modul <code>prelude</code> berisi bagian-bagian yang paling umum
+        dipakai dari crate <code>rand</code>, dan <code>use</code> membuat
+        item-item itu tersedia di scope program kita.
+      </p>
+      <p>
+        Selanjutnya, kita menambahkan dua baris di tengah. Baris pertama
+        memanggil fungsi <code>rand::rng</code> yang memberi kita generator
+        angka acak tertentu — yang bekerja lokal di thread eksekusi saat ini
+        dan di-seed oleh sistem operasi. Lalu, kita memanggil method
+        <code>random_range</code> pada generator angka acak itu. Method ini
+        didefinisikan oleh trait <code>RngExt</code> yang merupakan bagian
+        dari modul <code>rand::prelude</code> yang kita bawa ke scope lewat
+        <code>use rand::prelude::*;</code>. Method <code>random_range</code>
+        menerima sebuah ekspresi range sebagai argumen dan menghasilkan angka
+        acak dalam range itu. Bentuk ekspresi range yang kita pakai di sini
+        adalah <code>start..=end</code>, yang inklusif di batas bawah maupun
+        atas, jadi kita menulis <code>1..=100</code> untuk meminta angka
+        antara 1 dan 100.
+      </p>
+      <div class="callout callout-tip">
+        <p class="callout-title">💡 cargo doc --open</p>
+        <p>
+          Kamu tidak akan otomatis tahu apa saja yang perlu dibawa ke scope
+          dan method/fungsi apa yang harus dipanggil dari sebuah crate —
+          setiap crate punya dokumentasinya sendiri. Fitur keren lain dari
+          Cargo: menjalankan <code>cargo doc --open</code> akan membangun
+          dokumentasi dari semua dependency-mu secara lokal dan membukanya
+          di browser. Kalau kamu penasaran dengan fitur lain di
+          <code>rand</code>, jalankan perintah ini lalu klik <code>rand</code>
+          di sidebar kiri.
+        </p>
+      </div>
+      <p>
+        Baris baru kedua mencetak angka rahasianya. Ini berguna selama kita
+        mengembangkan programnya supaya bisa diuji, tapi nanti akan kita
+        hapus di versi final. Bukan permainan yang seru kalau programnya
+        langsung mencetak jawabannya begitu dimulai!
+      </p>
+      <p>Coba jalankan programnya beberapa kali:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling guessing_game v0.1.0 (file:///projects/guessing_game)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `target/debug/guessing_game`
+Tebak angkanya!
+Angka rahasianya adalah: 7
+Silakan masukkan tebakanmu.
+4
+Kamu menebak: 4
+
+$ cargo run
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `target/debug/guessing_game`
+Tebak angkanya!
+Angka rahasianya adalah: 83
+Silakan masukkan tebakanmu.
+5
+Kamu menebak: 5</code></pre>
+      <p>
+        Kamu seharusnya mendapat angka acak yang berbeda-beda, dan semuanya
+        seharusnya berada antara 1 dan 100.
+      </p>
+
+      <h2 id="membandingkan">Membandingkan Tebakan dengan Angka Rahasia</h2>
+      <p>
+        Sekarang kita punya input pengguna dan angka acak, kita bisa
+        membandingkan keduanya. Perhatikan bahwa kode berikut belum bisa
+        dikompilasi — akan kita jelaskan kenapa.
+      </p>
+      <div class="code-badge code-badge-error">❌ Belum bisa dikompilasi</div>
+      <pre><code class="language-rust">use std::cmp::Ordering;
+use std::io;
+
+use rand::prelude::*;
+
+fn main() {
+    // --snip--
+
+    println!("Kamu menebak: {guess}");
+
+    match guess.cmp(&secret_number) {
+        Ordering::Less => println!("Terlalu kecil!"),
+        Ordering::Greater => println!("Terlalu besar!"),
+        Ordering::Equal => println!("Kamu menang!"),
+    }
+}</code></pre>
+      <p>
+        Pertama, kita tambahkan pernyataan <code>use</code> lain, membawa
+        sebuah tipe bernama <code>std::cmp::Ordering</code> ke scope dari
+        standard library. Tipe <code>Ordering</code> adalah enum lain, dengan
+        variant <code>Less</code>, <code>Greater</code>, dan <code>Equal</code>.
+        Ini adalah tiga kemungkinan hasil ketika kamu membandingkan dua
+        nilai.
+      </p>
+      <p>
+        Lalu, kita tambahkan lima baris baru di bawah yang memakai tipe
+        <code>Ordering</code>. Method <code>cmp</code> membandingkan dua
+        nilai dan bisa dipanggil pada apa pun yang bisa dibandingkan. Method
+        ini menerima referensi ke apa pun yang ingin kamu bandingkan — di
+        sini, ia membandingkan <code>guess</code> dengan
+        <code>secret_number</code>. Lalu method itu mengembalikan sebuah
+        variant dari enum <code>Ordering</code> yang kita bawa ke scope lewat
+        <code>use</code>. Kita pakai ekspresi <code>match</code> untuk
+        menentukan apa yang harus dilakukan berdasarkan variant
+        <code>Ordering</code> apa yang dikembalikan dari pemanggilan
+        <code>cmp</code>.
+      </p>
+      <p>
+        Sebuah ekspresi <code>match</code> tersusun dari beberapa
+        <strong>arm</strong> (lengan/cabang). Sebuah arm terdiri dari sebuah
+        <strong>pattern</strong> untuk dicocokkan, dan kode yang dijalankan
+        kalau nilai yang diberikan ke <code>match</code> cocok dengan pattern
+        arm tersebut. Rust mengambil nilai yang diberikan ke <code>match</code>
+        dan memeriksa pattern setiap arm secara berurutan. Pattern dan
+        konstruksi <code>match</code> adalah fitur Rust yang sangat kuat —
+        keduanya memungkinkan kamu mengekspresikan berbagai kemungkinan
+        situasi yang mungkin ditemui kodemu, dan memastikan kamu menangani
+        semuanya. Fitur-fitur ini akan dibahas mendalam di Bab 6 dan Bab 19.
+      </p>
+      <p>
+        Mari telusuri contoh dengan ekspresi <code>match</code> yang kita
+        pakai di sini. Misalkan pengguna menebak 50 dan angka rahasia acaknya
+        kali ini adalah 38.
+      </p>
+      <p>
+        Ketika kode membandingkan 50 dengan 38, method <code>cmp</code> akan
+        mengembalikan <code>Ordering::Greater</code> karena 50 lebih besar
+        dari 38. Ekspresi <code>match</code> mendapat nilai
+        <code>Ordering::Greater</code> dan mulai memeriksa pattern tiap arm.
+        Ia melihat pattern arm pertama, <code>Ordering::Less</code>, dan
+        melihat bahwa nilai <code>Ordering::Greater</code> tidak cocok dengan
+        <code>Ordering::Less</code>, sehingga ia mengabaikan kode di arm itu
+        dan lanjut ke arm berikutnya. Pattern arm berikutnya adalah
+        <code>Ordering::Greater</code>, yang <strong>cocok</strong> dengan
+        <code>Ordering::Greater</code>! Kode terkait di arm itu akan
+        dijalankan dan mencetak <code>Terlalu besar!</code> ke layar.
+        Ekspresi <code>match</code> berhenti setelah arm pertama yang cocok
+        ditemukan, jadi arm terakhir tidak akan diperiksa dalam skenario ini.
+      </p>
+      <p>Tapi, kode di atas belum bisa dikompilasi. Mari kita coba:</p>
+      <pre><code class="language-text">$ cargo build
+   Compiling libc v0.2.186
+   Compiling rand_core v0.10.1
+   Compiling getrandom v0.4.3
+   Compiling cfg-if v1.0.0
+   Compiling chacha20 v0.10.1
+   Compiling rand v0.10.1
+   Compiling guessing_game v0.1.0 (file:///projects/guessing_game)
+error[E0308]: mismatched types
+  --> src/main.rs:23:21
+   |
+23 |     match guess.cmp(&secret_number) {
+   |                 --- ^^^^^^^^^^^^^^ expected `&String`, found `&{integer}`
+   |                 |
+   |                 arguments to this method are incorrect
+   |
+   = note: expected reference `&String`
+              found reference `&{integer}`
+
+error: could not compile `guessing_game` (bin "guessing_game") due to 1 previous error</code></pre>
+      <p>
+        Inti dari error ini adalah <em>mismatched types</em> (tipe tidak
+        cocok). Rust punya sistem tipe yang kuat dan statis. Tapi ia juga
+        punya <em>type inference</em> (penyimpulan tipe otomatis). Ketika
+        kita menulis <code>let mut guess = String::new()</code>, Rust bisa
+        menyimpulkan bahwa <code>guess</code> seharusnya bertipe
+        <code>String</code> tanpa kita perlu menuliskannya secara eksplisit.
+        Sementara itu <code>secret_number</code> adalah tipe angka. Beberapa
+        tipe angka di Rust bisa menampung nilai antara 1 dan 100:
+        <code>i32</code> (angka 32-bit), <code>u32</code> (angka 32-bit tanpa
+        tanda/<em>unsigned</em>), <code>i64</code> (angka 64-bit), dan
+        lain-lain. Kecuali ditentukan sebaliknya, Rust memakai <code>i32</code>
+        sebagai default — itulah tipe <code>secret_number</code> kecuali kamu
+        menambahkan informasi tipe lain yang membuat Rust menyimpulkan tipe
+        angka berbeda. Alasan error ini muncul: Rust tidak bisa membandingkan
+        tipe string dengan tipe angka.
+      </p>
+      <p>
+        Pada akhirnya, kita ingin mengonversi <code>String</code> yang dibaca
+        program sebagai input menjadi tipe angka, supaya bisa dibandingkan
+        secara numerik dengan angka rahasia. Kita lakukan itu dengan
+        menambahkan baris ini ke badan fungsi <code>main</code>:
+      </p>
+      <pre><code class="language-rust">let guess: u32 = guess.trim().parse().expect("Tolong masukkan angka!");</code></pre>
+      <p>
+        Kita membuat sebuah variabel bernama <code>guess</code>. Tapi
+        tunggu, bukankah program sudah punya variabel bernama
+        <code>guess</code>? Betul, tapi Rust dengan baik hati mengizinkan
+        kita men-<em>shadow</em> nilai <code>guess</code> sebelumnya dengan
+        nilai baru. <strong>Shadowing</strong> memungkinkan kita memakai
+        ulang nama variabel <code>guess</code> alih-alih dipaksa membuat dua
+        variabel unik, misalnya <code>guess_str</code> dan <code>guess</code>.
+        Kita akan bahas ini lebih detail di Bab 3, tapi untuk sekarang,
+        ketahuilah bahwa fitur ini sering dipakai ketika kamu ingin
+        mengonversi sebuah nilai dari satu tipe ke tipe lain.
+      </p>
+      <p>
+        Kita mengikat variabel baru ini ke ekspresi
+        <code>guess.trim().parse()</code>. <code>guess</code> di ekspresi
+        ini merujuk ke variabel <code>guess</code> yang asli yang berisi
+        input dalam bentuk string. Method <code>trim</code> pada instance
+        <code>String</code> akan menghapus whitespace di awal dan akhir,
+        yang harus kita lakukan sebelum mengonversi string ke <code>u32</code>,
+        yang hanya bisa berisi data numerik. Pengguna harus menekan Enter
+        untuk memenuhi <code>read_line</code> dan memasukkan tebakannya, yang
+        menambahkan karakter newline ke string. Misalnya kalau pengguna
+        mengetik <kbd>5</kbd> lalu menekan Enter, <code>guess</code> akan
+        terlihat seperti ini: <code>5\n</code>. <code>\n</code>
+        merepresentasikan "newline" (baris baru). (Di Windows, menekan Enter
+        menghasilkan carriage return dan newline, <code>\r\n</code>.) Method
+        <code>trim</code> menghapus <code>\n</code> atau <code>\r\n</code>
+        itu, menyisakan hanya <code>5</code>.
+      </p>
+      <p>
+        Method <code>parse</code> pada string mengonversi string menjadi
+        tipe lain. Di sini, kita memakainya untuk mengonversi dari string
+        menjadi angka. Kita perlu memberi tahu Rust tipe angka yang persis
+        kita inginkan lewat <code>let guess: u32</code>. Tanda titik dua
+        (<code>:</code>) setelah <code>guess</code> memberi tahu Rust bahwa
+        kita akan mengumumkan (<em>annotate</em>) tipe variabelnya. Rust
+        punya beberapa tipe angka bawaan; <code>u32</code> yang kita pakai
+        di sini adalah bilangan bulat 32-bit tanpa tanda (unsigned). Ini
+        pilihan default yang bagus untuk angka positif kecil. Kamu akan
+        belajar tipe angka lain di Bab 3.
+      </p>
+      <p>
+        Selain itu, anotasi <code>u32</code> di contoh ini, ditambah
+        perbandingan dengan <code>secret_number</code>, membuat Rust
+        menyimpulkan bahwa <code>secret_number</code> juga seharusnya
+        bertipe <code>u32</code>. Jadi, sekarang perbandingannya dilakukan
+        antara dua nilai bertipe sama!
+      </p>
+      <p>
+        Method <code>parse</code> hanya bekerja pada karakter yang secara
+        logis bisa dikonversi menjadi angka, sehingga bisa dengan mudah
+        menyebabkan error. Misalnya, kalau string-nya berisi <code>A👍%</code>,
+        tidak ada cara untuk mengonversinya menjadi angka. Karena bisa gagal,
+        method <code>parse</code> mengembalikan tipe <code>Result</code>,
+        sama seperti method <code>read_line</code>. Kita menangani
+        <code>Result</code> ini dengan cara yang sama, memakai method
+        <code>expect</code> lagi. Kalau <code>parse</code> mengembalikan
+        variant <code>Err</code> karena tidak bisa membuat angka dari
+        string-nya, pemanggilan <code>expect</code> akan membuat game crash
+        dan mencetak pesan yang kita berikan. Kalau <code>parse</code>
+        berhasil mengonversi string menjadi angka, ia akan mengembalikan
+        variant <code>Ok</code> dari <code>Result</code>, dan
+        <code>expect</code> akan mengembalikan angka yang kita inginkan dari
+        nilai <code>Ok</code> tersebut.
+      </p>
+      <p>Mari jalankan programnya sekarang:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling guessing_game v0.1.0 (file:///projects/guessing_game)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.26s
+     Running `target/debug/guessing_game`
+Tebak angkanya!
+Angka rahasianya adalah: 58
+Silakan masukkan tebakanmu.
+  76
+Kamu menebak: 76
+Terlalu besar!</code></pre>
+      <p>
+        Bagus! Walaupun ada spasi sebelum tebakannya, program tetap berhasil
+        mengetahui bahwa pengguna menebak 76. Jalankan programnya beberapa
+        kali untuk memverifikasi perilaku yang berbeda dengan berbagai jenis
+        input: tebak angkanya dengan benar, tebak angka yang terlalu tinggi,
+        dan tebak angka yang terlalu rendah.
+      </p>
+      <p>
+        Sejauh ini sebagian besar game sudah bekerja, tapi pengguna hanya
+        bisa menebak satu kali. Mari ubah itu dengan menambahkan loop!
+      </p>
+
+      <h2 id="looping">Mengizinkan Banyak Tebakan dengan Loop</h2>
+      <p>
+        Keyword <code>loop</code> membuat sebuah loop tanpa henti (infinite
+        loop). Kita tambahkan loop supaya pengguna punya lebih banyak
+        kesempatan menebak:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">// --snip--
+
+    println!("Angka rahasianya adalah: {secret_number}");
+
+    loop {
+        println!("Silakan masukkan tebakanmu.");
+
+        // --snip--
+
+        match guess.cmp(&secret_number) {
+            Ordering::Less => println!("Terlalu kecil!"),
+            Ordering::Greater => println!("Terlalu besar!"),
+            Ordering::Equal => println!("Kamu menang!"),
+        }
+    }
+}</code></pre>
+      <p>
+        Seperti terlihat, kita memindahkan semuanya mulai dari prompt input
+        tebakan ke dalam sebuah loop. Pastikan mengindentasi baris-baris di
+        dalam loop empat spasi lagi, lalu jalankan lagi programnya. Program
+        sekarang akan terus-menerus meminta tebakan lagi, yang justru
+        memunculkan masalah baru: sepertinya pengguna tidak bisa berhenti!
+      </p>
+      <p>
+        Pengguna selalu bisa menghentikan paksa program dengan pintasan
+        keyboard <kbd>ctrl</kbd>-<kbd>c</kbd>. Tapi ada cara lain untuk
+        keluar dari "monster" tak terpuaskan ini: kalau pengguna memasukkan
+        jawaban yang bukan angka, program akan crash. Kita bisa manfaatkan
+        itu untuk mengizinkan pengguna berhenti:
+      </p>
+      <pre><code class="language-text">$ cargo run
+   Compiling guessing_game v0.1.0 (file:///projects/guessing_game)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.23s
+     Running `target/debug/guessing_game`
+Tebak angkanya!
+Angka rahasianya adalah: 59
+Silakan masukkan tebakanmu.
+45
+Kamu menebak: 45
+Terlalu kecil!
+Silakan masukkan tebakanmu.
+60
+Kamu menebak: 60
+Terlalu besar!
+Silakan masukkan tebakanmu.
+59
+Kamu menebak: 59
+Kamu menang!
+Silakan masukkan tebakanmu.
+keluar
+
+thread 'main' panicked at src/main.rs:28:47:
+Tolong masukkan angka!: ParseIntError { kind: InvalidDigit }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace</code></pre>
+      <p>
+        Mengetik <code>keluar</code> akan menghentikan game, tapi seperti
+        terlihat, memasukkan input bukan-angka apa pun juga akan
+        melakukannya. Ini kurang ideal — kita juga ingin game berhenti ketika
+        angkanya berhasil ditebak dengan benar.
+      </p>
+
+      <h3 id="quit-after-win">Berhenti Setelah Menebak Benar</h3>
+      <p>Mari program game-nya berhenti ketika pengguna menang, dengan menambahkan pernyataan <code>break</code>:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">match guess.cmp(&secret_number) {
+    Ordering::Less => println!("Terlalu kecil!"),
+    Ordering::Greater => println!("Terlalu besar!"),
+    Ordering::Equal => {
+        println!("Kamu menang!");
+        break;
+    }
+}</code></pre>
+      <p>
+        Menambahkan baris <code>break</code> setelah <code>Kamu menang!</code>
+        membuat program keluar dari loop saat pengguna berhasil menebak angka
+        rahasianya dengan benar. Keluar dari loop juga berarti keluar dari
+        program, karena loop ini adalah bagian terakhir dari <code>main</code>.
+      </p>
+
+      <h3 id="invalid-input">Menangani Input Tidak Valid</h3>
+      <p>
+        Untuk lebih menyempurnakan perilaku game, alih-alih membuat program
+        crash saat pengguna memasukkan sesuatu yang bukan angka, mari kita
+        buat game mengabaikan input itu supaya pengguna bisa terus menebak.
+        Kita bisa lakukan itu dengan mengubah baris tempat <code>guess</code>
+        dikonversi dari <code>String</code> ke <code>u32</code>:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">let guess: u32 = match guess.trim().parse() {
+    Ok(num) => num,
+    Err(_) => continue,
+};</code></pre>
+      <p>
+        Kita beralih dari pemanggilan <code>expect</code> menjadi ekspresi
+        <code>match</code>, untuk beralih dari "crash saat error" menjadi
+        "menangani error". Ingat, <code>parse</code> mengembalikan tipe
+        <code>Result</code>, dan <code>Result</code> adalah enum yang punya
+        variant <code>Ok</code> dan <code>Err</code>. Kita memakai ekspresi
+        <code>match</code> di sini, sama seperti yang kita lakukan dengan
+        hasil <code>Ordering</code> dari method <code>cmp</code>.
+      </p>
+      <p>
+        Kalau <code>parse</code> berhasil mengubah string menjadi angka, ia
+        akan mengembalikan nilai <code>Ok</code> yang berisi angka hasilnya.
+        Nilai <code>Ok</code> itu akan cocok dengan pattern arm pertama, dan
+        ekspresi <code>match</code> akan mengembalikan nilai <code>num</code>
+        yang dihasilkan <code>parse</code> dan dibungkus di dalam
+        <code>Ok</code>. Angka itu akan berakhir tepat di tempat yang kita
+        mau, di variabel <code>guess</code> yang baru kita buat.
+      </p>
+      <p>
+        Kalau <code>parse</code> <strong>tidak</strong> berhasil mengubah
+        string menjadi angka, ia akan mengembalikan nilai <code>Err</code>
+        yang berisi informasi lebih lanjut tentang errornya. Nilai
+        <code>Err</code> tidak cocok dengan pattern <code>Ok(num)</code> di
+        arm pertama, tapi cocok dengan pattern <code>Err(_)</code> di arm
+        kedua. Underscore <code>_</code> adalah nilai <em>catch-all</em>
+        (menampung semua) — di contoh ini, artinya kita ingin mencocokkan
+        semua nilai <code>Err</code>, apa pun informasi di dalamnya. Jadi,
+        program akan menjalankan kode arm kedua, <code>continue</code>, yang
+        memberi tahu program untuk lanjut ke iterasi <code>loop</code>
+        berikutnya dan meminta tebakan lain. Secara efektif, program ini
+        mengabaikan semua error yang mungkin ditemui <code>parse</code>!
+      </p>
+      <p>Sekarang semuanya seharusnya bekerja sesuai harapan. Mari coba:</p>
+      <pre><code class="language-text">$ cargo run
+   Compiling guessing_game v0.1.0 (file:///projects/guessing_game)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running `target/debug/guessing_game`
+Tebak angkanya!
+Angka rahasianya adalah: 61
+Silakan masukkan tebakanmu.
+10
+Kamu menebak: 10
+Terlalu kecil!
+Silakan masukkan tebakanmu.
+99
+Kamu menebak: 99
+Terlalu besar!
+Silakan masukkan tebakanmu.
+foo
+Silakan masukkan tebakanmu.
+61
+Kamu menebak: 61
+Kamu menang!</code></pre>
+
+      <div class="quiz">
+        <p class="quiz-question">Kenapa pattern kedua di match tersebut ditulis <code>Err(_)</code>, bukan misalnya <code>Err(e)</code>?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Err(e) sebenarnya juga valid secara sintaks — tapi itu bukan alasan program ini memakai underscore.">Karena Err(e) akan menyebabkan error kompilasi</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. Underscore _ adalah pattern catch-all yang berarti 'aku tidak peduli isi datanya, aku hanya ingin mencocokkan bahwa ini variant Err'. Kita tidak butuh detail errornya karena kita cuma ingin continue.">Karena kita tidak peduli detail informasi error-nya — kita hanya ingin mencocokkan bahwa hasilnya Err lalu continue</button>
+          <button class="quiz-option" data-explain="continue tetap bisa dipakai di arm manapun, tidak terikat dengan penulisan pattern-nya.">Karena continue hanya bisa dipakai bersama underscore</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <h2 id="selesai">Sentuhan Akhir</h2>
+      <p>
+        Sip! Dengan satu penyesuaian kecil terakhir, kita akan menyelesaikan
+        permainan tebak angka ini. Ingat, program masih mencetak angka
+        rahasianya. Itu berguna untuk pengujian, tapi merusak keseruan
+        game-nya. Mari hapus <code>println!</code> yang mencetak angka
+        rahasia itu. Berikut kode final lengkapnya:
+      </p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">use std::cmp::Ordering;
+use std::io;
+
+use rand::prelude::*;
+
+fn main() {
+    println!("Tebak angkanya!");
+
+    let secret_number = rand::rng().random_range(1..=100);
+
+    loop {
+        println!("Silakan masukkan tebakanmu.");
+
+        let mut guess = String::new();
+
+        io::stdin()
+            .read_line(&mut guess)
+            .expect("Gagal membaca baris input");
+
+        let guess: u32 = match guess.trim().parse() {
+            Ok(num) => num,
+            Err(_) => continue,
+        };
+
+        println!("Kamu menebak: {guess}");
+
+        match guess.cmp(&secret_number) {
+            Ordering::Less => println!("Terlalu kecil!"),
+            Ordering::Greater => println!("Terlalu besar!"),
+            Ordering::Equal => {
+                println!("Kamu menang!");
+                break;
+            }
+        }
+    }
+}</code></pre>
+      <p>Selamat, kamu berhasil membangun permainan tebak angka! 🎉</p>
+
+      <div class="callout callout-exercise">
+        <p class="callout-title">🏋️ Coba Sendiri</p>
+        <p>
+          Sebelum lanjut, coba modifikasi game ini sendiri: batasi jumlah
+          percobaan tebakan (misalnya maksimal 10 kali), atau tambahkan pesan
+          "hampir benar!" kalau tebakan pemain sangat dekat dengan angka
+          rahasianya. Ini latihan bagus untuk membiasakan diri membaca dan
+          mengubah kode Rust sebelum kita bahas konsepnya lebih formal di
+          Bab 3.
+        </p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Proyek ini adalah cara praktik langsung untuk mengenal banyak konsep baru Rust: <code>let</code>, <code>match</code>, fungsi, pemakaian crate eksternal, dan lainnya.</li>
+          <li><code>Result</code> dan <code>Ordering</code> adalah enum — tipe yang bisa berupa salah satu dari beberapa variant, dan <code>match</code> memaksa kita menangani setiap kemungkinannya.</li>
+          <li>Variabel di Rust immutable secara default; tambahkan <code>mut</code> untuk membuatnya mutable.</li>
+          <li>Cargo mengelola dependency eksternal (crate) lewat <code>Cargo.toml</code>, dengan versi yang dikunci di <code>Cargo.lock</code> untuk build yang reproducible.</li>
+          <li><code>loop</code>, <code>break</code>, dan <code>continue</code> mengontrol alur perulangan program.</li>
+        </ul>
+        <p>
+          Bab 3 akan membahas konsep-konsep yang dimiliki hampir semua bahasa
+          pemrograman — variabel, tipe data, dan fungsi — dan menunjukkan cara
+          memakainya di Rust secara lebih formal. Bab 4 akan membahas
+          ownership, fitur yang membuat Rust berbeda dari bahasa lain. Bab 5
+          membahas struct dan method syntax, dan Bab 6 menjelaskan cara kerja
+          enum.
+        </p>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1.3 Hello, Cargo! — Belajar Rust</title>
+<meta name="description" content="Berkenalan dengan Cargo, build system dan package manager resmi Rust: membuat proyek, build, run, check, dan release.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch01-03">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 1: Memulai</nav>
+    <article>
+      <p class="chapter-label">Bab 1.3</p>
+      <h1>Hello, Cargo!</h1>
+
+      <p class="lead">
+        Cargo adalah build system sekaligus package manager resmi Rust. Hampir
+        semua Rustacean memakai tool ini untuk mengelola proyek Rust mereka,
+        karena Cargo menangani banyak pekerjaan sekaligus: mengompilasi kode,
+        mengunduh pustaka (<em>library</em>) yang dibutuhkan kodemu, dan
+        mengompilasi pustaka-pustaka itu. Pustaka yang dibutuhkan kodemu kita
+        sebut <strong>dependency</strong>.
+      </p>
+
+      <p>
+        Program Rust paling sederhana, seperti yang kita tulis di subbab
+        sebelumnya, tidak punya dependency apa pun. Kalau proyek "Hello,
+        world!" tadi dibangun dengan Cargo, ia hanya akan memakai bagian
+        Cargo yang menangani kompilasi kode. Seiring programmu makin
+        kompleks, kamu akan menambah dependency, dan kalau proyekmu memakai
+        Cargo sejak awal, menambah dependency jadi jauh lebih mudah.
+      </p>
+
+      <p>
+        Karena mayoritas besar proyek Rust memakai Cargo, sisa kursus ini
+        mengasumsikan kamu juga memakainya. Cargo otomatis ikut terpasang
+        kalau kamu menginstal Rust lewat installer resmi di subbab
+        sebelumnya. Untuk memastikan, jalankan:
+      </p>
+      <pre><code class="language-shell">$ cargo --version</code></pre>
+      <p>
+        Kalau muncul nomor versi, berarti Cargo sudah siap dipakai! Kalau
+        muncul error seperti <code>command not found</code>, cek dokumentasi
+        metode instalasi Rust yang kamu pakai untuk menginstal Cargo secara
+        terpisah.
+      </p>
+
+      <h2 id="membuat-proyek">Membuat Proyek dengan Cargo</h2>
+      <p>
+        Mari kita buat proyek baru dengan Cargo dan lihat bedanya dengan
+        proyek "Hello, world!" tadi. Kembali ke folder <code>projects</code>-mu,
+        lalu jalankan (perintah ini sama persis di semua sistem operasi):
+      </p>
+      <pre><code class="language-shell">$ cargo new hello_cargo
+$ cd hello_cargo</code></pre>
+      <p>
+        Perintah pertama membuat folder dan proyek baru bernama
+        <code>hello_cargo</code>. Cargo menaruh semua file proyek di dalam
+        folder dengan nama yang sama.
+      </p>
+      <p>
+        Masuk ke folder <code>hello_cargo</code> dan lihat isinya. Cargo sudah
+        membuatkan dua file dan satu folder untuk kita: file
+        <code>Cargo.toml</code> dan folder <code>src</code> yang berisi file
+        <code>main.rs</code>.
+      </p>
+      <p>
+        Cargo juga otomatis menginisialisasi repository Git baru beserta file
+        <code>.gitignore</code>-nya. (File Git tidak akan dibuat kalau kamu
+        menjalankan <code>cargo new</code> di dalam repository Git yang sudah
+        ada. Kamu bisa mengubah perilaku ini dengan flag <code>--vcs</code>.)
+      </p>
+
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Apa itu Git?</p>
+        <p>
+          Git adalah sistem version control yang sangat umum dipakai. Kamu
+          bisa mengganti <code>cargo new</code> untuk memakai version control
+          lain, atau tanpa version control sama sekali, lewat flag
+          <code>--vcs</code>. Jalankan <code>cargo new --help</code> untuk
+          melihat semua opsi yang tersedia.
+        </p>
+      </div>
+
+      <p>Buka <code>Cargo.toml</code> di text editor-mu. Isinya kurang lebih seperti ini:</p>
+      <p class="filename-label">Nama berkas: Cargo.toml</p>
+      <pre><code class="language-toml">[package]
+name = "hello_cargo"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]</code></pre>
+      <p>
+        File ini memakai format <strong>TOML</strong> (<em>Tom's Obvious,
+        Minimal Language</em>) — format konfigurasi yang dipakai Cargo.
+      </p>
+      <ul>
+        <li>
+          Baris pertama, <code>[package]</code>, adalah judul seksi yang
+          menandakan baris-baris di bawahnya adalah konfigurasi sebuah
+          package. Seiring kita menambah informasi ke file ini, seksi lain
+          akan ditambahkan.
+        </li>
+        <li>
+          Tiga baris berikutnya menyimpan informasi yang dibutuhkan Cargo
+          untuk mengompilasi programmu: nama, versi, dan edisi Rust yang
+          dipakai (dibahas lebih lanjut di Lampiran E).
+        </li>
+        <li>
+          Baris terakhir, <code>[dependencies]</code>, adalah awal dari seksi
+          untuk mendaftarkan dependency proyekmu. Di Rust, paket kode disebut
+          <strong>crate</strong>. Proyek ini belum butuh crate lain, tapi kita
+          akan memakainya di proyek pertama Bab 2.
+        </li>
+      </ul>
+
+      <p>Sekarang buka <code>src/main.rs</code>:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    println!("Hello, world!");
+}</code></pre>
+      <p>
+        Cargo sudah membuatkan program "Hello, world!" untukmu, persis seperti
+        yang kita tulis manual sebelumnya! Sejauh ini, bedanya cuma: Cargo
+        menaruh kode di dalam folder <code>src</code>, dan kita punya file
+        konfigurasi <code>Cargo.toml</code> di folder paling atas.
+      </p>
+      <p>
+        Cargo mengharapkan semua source file-mu berada di dalam folder
+        <code>src</code>. Folder proyek tingkat atas hanya untuk file README,
+        lisensi, file konfigurasi, dan hal lain yang tidak berkaitan langsung
+        dengan kode. Ada tempat untuk semuanya, dan semuanya ada pada
+        tempatnya — begitulah Cargo membantumu tetap terorganisir.
+      </p>
+      <div class="callout callout-tip">
+        <p class="callout-title">💡 Sudah punya proyek tanpa Cargo?</p>
+        <p>
+          Kalau kamu memulai proyek tanpa Cargo (seperti proyek "Hello,
+          world!" tadi), kamu bisa mengonversinya: pindahkan kode ke folder
+          <code>src</code>, lalu buat file <code>Cargo.toml</code> yang
+          sesuai. Cara termudah membuat <code>Cargo.toml</code> itu adalah
+          menjalankan <code>cargo init</code>.
+        </p>
+      </div>
+
+      <h2 id="build-run">Build dan Run Proyek Cargo</h2>
+      <p>
+        Sekarang mari lihat apa bedanya saat kita build dan jalankan program
+        "Hello, world!" ini lewat Cargo. Dari folder <code>hello_cargo</code>,
+        build proyekmu dengan:
+      </p>
+      <pre><code class="language-shell">$ cargo build
+   Compiling hello_cargo v0.1.0 (file:///projects/hello_cargo)
+    Finished dev [unoptimized + debuginfo] target(s) in 2.85 secs</code></pre>
+      <p>
+        Perintah ini membuat file executable di
+        <code>target/debug/hello_cargo</code> (atau
+        <code>target\debug\hello_cargo.exe</code> di Windows), bukan di folder
+        saat ini. Karena build default adalah <em>debug build</em>, Cargo
+        menaruh binary-nya di folder bernama <code>debug</code>. Kamu bisa
+        menjalankan executable-nya dengan:
+      </p>
+      <pre><code class="language-shell">$ ./target/debug/hello_cargo # atau .\target\debug\hello_cargo.exe di Windows
+Hello, world!</code></pre>
+      <p>
+        Kalau semua lancar, <code>Hello, world!</code> akan tercetak di
+        terminal. Menjalankan <code>cargo build</code> untuk pertama kalinya
+        juga membuat file baru di folder paling atas: <code>Cargo.lock</code>.
+        File ini mencatat versi persis dari setiap dependency di proyekmu.
+        Proyek ini belum punya dependency, jadi isinya masih tipis. Kamu tidak
+        akan perlu mengubah file ini secara manual — Cargo yang mengelola
+        isinya.
+      </p>
+
+      <p>
+        Kita baru saja build proyek dengan <code>cargo build</code> lalu
+        menjalankannya lewat <code>./target/debug/hello_cargo</code> — tapi
+        kita juga bisa memakai <code>cargo run</code> untuk mengompilasi
+        <em>sekaligus</em> menjalankan hasilnya dalam satu perintah:
+      </p>
+      <pre><code class="language-shell">$ cargo run
+    Finished dev [unoptimized + debuginfo] target(s) in 0.0 secs
+     Running `target/debug/hello_cargo`
+Hello, world!</code></pre>
+      <p>
+        Memakai <code>cargo run</code> lebih praktis daripada harus mengingat
+        menjalankan <code>cargo build</code> lalu mengetik path lengkap ke
+        binary-nya, jadi kebanyakan developer memakai <code>cargo run</code>.
+      </p>
+      <p>
+        Perhatikan bahwa kali ini kita tidak melihat output yang menandakan
+        Cargo sedang meng-compile <code>hello_cargo</code>. Cargo tahu file
+        sumbernya tidak berubah, jadi ia tidak build ulang — cukup jalankan
+        binary yang sudah ada. Kalau kamu mengubah source code-nya, Cargo akan
+        build ulang lebih dulu sebelum menjalankannya, dan kamu akan melihat
+        output seperti ini:
+      </p>
+      <pre><code class="language-shell">$ cargo run
+   Compiling hello_cargo v0.1.0 (file:///projects/hello_cargo)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.33 secs
+     Running `target/debug/hello_cargo`
+Hello, world!</code></pre>
+
+      <p>
+        Cargo juga menyediakan perintah <code>cargo check</code>. Perintah ini
+        dengan cepat memeriksa kodemu untuk memastikan bisa dikompilasi, tapi
+        <strong>tidak</strong> menghasilkan file executable:
+      </p>
+      <pre><code class="language-shell">$ cargo check
+   Checking hello_cargo v0.1.0 (file:///projects/hello_cargo)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.32 secs</code></pre>
+      <p>
+        Kenapa kadang kamu tidak butuh file executable? Karena
+        <code>cargo check</code> jauh lebih cepat daripada
+        <code>cargo build</code> — ia melewati langkah menghasilkan file
+        executable. Kalau kamu terus-menerus mengecek pekerjaanmu sambil
+        menulis kode, memakai <code>cargo check</code> akan mempercepat proses
+        untuk mengetahui apakah proyekmu masih bisa dikompilasi. Banyak
+        Rustacean rutin menjalankan <code>cargo check</code> saat menulis
+        program untuk memastikan kodenya tetap valid, lalu baru menjalankan
+        <code>cargo build</code> ketika executable-nya benar-benar dibutuhkan.
+      </p>
+
+      <div class="callout callout-tip">
+        <p class="callout-title">💡 Rekap perintah Cargo yang sudah kita pelajari</p>
+        <ul>
+          <li><code>cargo new</code> — membuat proyek baru.</li>
+          <li><code>cargo build</code> — meng-compile proyek.</li>
+          <li><code>cargo run</code> — meng-compile sekaligus menjalankan proyek dalam satu langkah.</li>
+          <li><code>cargo check</code> — meng-compile untuk mengecek error saja, tanpa menghasilkan binary.</li>
+          <li>Hasil build disimpan di folder <code>target/debug</code>, bukan di folder kode sumbernya.</li>
+        </ul>
+      </div>
+
+      <p>
+        Keuntungan tambahan memakai Cargo: perintah-perintah di atas sama
+        persis di sistem operasi apa pun. Jadi mulai titik ini, kursus ini
+        tidak akan lagi memberi instruksi terpisah untuk Linux/macOS vs
+        Windows.
+      </p>
+
+      <h2 id="release">Build untuk Rilis (Release)</h2>
+      <p>
+        Ketika proyekmu akhirnya siap dirilis, pakai <code>cargo build
+        --release</code> untuk mengompilasinya dengan optimisasi. Perintah ini
+        akan membuat executable di <code>target/release</code>, bukan
+        <code>target/debug</code>. Optimisasi ini membuat kode Rust-mu
+        berjalan lebih cepat, tapi mengaktifkannya memperlama waktu kompilasi.
+        Karena itulah ada dua profil build berbeda: satu untuk development
+        (di mana kamu ingin build ulang dengan cepat dan sering), dan satu
+        lagi untuk membangun program final yang akan diberikan ke pengguna —
+        yang tidak akan di-build ulang berkali-kali dan harus berjalan
+        secepat mungkin. Kalau kamu sedang mengukur performa (benchmarking)
+        kodemu, pastikan menjalankan <code>cargo build --release</code> dan
+        mengukur dari executable di <code>target/release</code>.
+      </p>
+
+      <h2 id="konvensi">Cargo sebagai Konvensi Bersama</h2>
+      <p>
+        Untuk proyek sederhana, Cargo tidak memberi banyak nilai tambah
+        dibanding memakai <code>rustc</code> langsung — tapi manfaatnya akan
+        terasa begitu programmu makin rumit. Begitu program berkembang jadi
+        banyak file atau butuh dependency, jauh lebih mudah membiarkan Cargo
+        yang mengoordinasikan proses build.
+      </p>
+      <p>
+        Walaupun proyek <code>hello_cargo</code> ini sederhana, ia sudah
+        memakai sebagian besar tooling nyata yang akan kamu pakai sepanjang
+        karier Rust-mu. Faktanya, untuk bekerja pada proyek yang sudah ada,
+        kamu bisa memakai perintah berikut untuk meng-clone kodenya lewat
+        Git, masuk ke folder proyek itu, dan build:
+      </p>
+      <pre><code class="language-shell">$ git clone example.org/someproject
+$ cd someproject
+$ cargo build</code></pre>
+      <p>
+        Untuk informasi lebih lanjut tentang Cargo, lihat
+        <a href="https://doc.rust-lang.org/cargo/" target="_blank" rel="noopener">dokumentasi resminya</a>.
+      </p>
+
+      <div class="quiz">
+        <p class="quiz-question">Apa perbedaan utama antara <code>cargo build</code> dan <code>cargo check</code>?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Keduanya sama-sama bisa dijalankan di sistem operasi apa pun — itu bukan pembedanya.">cargo build hanya jalan di Linux, cargo check jalan di semua OS</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. cargo check jauh lebih cepat karena melewati langkah menghasilkan binary — cocok dipakai sering-sering saat menulis kode, sebelum akhirnya cargo build ketika binary-nya benar-benar dibutuhkan.">cargo check hanya memeriksa apakah kode bisa dikompilasi, tanpa menghasilkan file executable</button>
+          <button class="quiz-option" data-explain="Optimisasi rilis diaktifkan lewat cargo build --release, bukan cargo check.">cargo check menghasilkan binary yang sudah dioptimasi untuk rilis</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan Bab 1</p>
+        <ul>
+          <li>Menginstal versi stabil terbaru Rust lewat <code>rustup</code>.</li>
+          <li>Meng-update ke versi Rust yang lebih baru dengan <code>rustup update</code>.</li>
+          <li>Membuka dokumentasi lokal dengan <code>rustup doc</code>.</li>
+          <li>Menulis dan menjalankan program "Hello, world!" langsung dengan <code>rustc</code>.</li>
+          <li>Membuat dan menjalankan proyek baru memakai konvensi Cargo (<code>cargo new</code>, <code>cargo build</code>, <code>cargo run</code>, <code>cargo check</code>).</li>
+        </ul>
+        <p>
+          Ini saat yang pas untuk membangun program yang lebih besar supaya
+          kamu terbiasa membaca dan menulis kode Rust. Di Bab 2, kita akan
+          membangun program permainan tebak angka.
+        </p>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

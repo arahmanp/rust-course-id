@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3.4 Komentar — Belajar Rust</title>
+<meta name="description" content="Cara menulis komentar yang idiomatis di Rust.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main-content">Langsung ke konten</a>
+<header class="site-header">
+  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
+  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
+  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+</header>
+<div class="layout">
+  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
+    <div class="sidebar-search">
+      <input id="search-input" type="search" placeholder="Cari materi...">
+    </div>
+    <div id="sidebar-nav"></div>
+  </nav>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main id="main-content" class="content" data-page-id="ch03-04">
+    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 3: Konsep Pemrograman Dasar</nav>
+    <article>
+      <p class="chapter-label">Bab 3.4</p>
+      <h1>Komentar</h1>
+
+      <p class="lead">
+        Semua programmer berusaha membuat kodenya mudah dipahami, tapi
+        kadang penjelasan tambahan tetap dibutuhkan. Dalam kasus seperti
+        itu, programmer meninggalkan <strong>komentar</strong> di source
+        code-nya — yang diabaikan compiler, tapi bisa berguna bagi orang
+        yang membaca source code itu.
+      </p>
+
+      <p>Berikut contoh komentar sederhana:</p>
+      <pre><code class="language-rust">// hello, world</code></pre>
+      <p>
+        Di Rust, gaya komentar yang idiomatis dimulai dengan dua garis
+        miring (<code>//</code>), dan komentarnya berlanjut sampai akhir
+        baris. Untuk komentar yang lebih dari satu baris, kamu perlu
+        menyertakan <code>//</code> di setiap barisnya, seperti ini:
+      </p>
+      <pre><code class="language-rust">// Jadi kita melakukan sesuatu yang rumit di sini, cukup panjang sampai
+// kita butuh beberapa baris komentar untuk menjelaskannya! Fiuh, semoga
+// komentar ini menjelaskan apa yang sedang terjadi.</code></pre>
+      <p>Komentar juga bisa diletakkan di akhir baris berisi kode:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    let lucky_number = 7; // Aku merasa beruntung hari ini
+}</code></pre>
+      <p>Tapi kamu akan lebih sering melihatnya dipakai dengan format ini, dengan komentar di baris terpisah di atas kode yang dijelaskannya:</p>
+      <p class="filename-label">Nama berkas: src/main.rs</p>
+      <pre><code class="language-rust">fn main() {
+    // Aku merasa beruntung hari ini
+    let lucky_number = 7;
+}</code></pre>
+
+      <div class="callout callout-note">
+        <p class="callout-title">ℹ️ Documentation Comments</p>
+        <p>
+          Rust juga punya jenis komentar lain, <em>documentation comments</em>
+          (diawali <code>///</code> atau <code>//!</code>), yang dipakai
+          untuk menghasilkan dokumentasi HTML otomatis untuk crate-mu. Kita
+          akan bahas ini di subbab 14.2 (Mempublikasikan Crate ke Crates.io).
+        </p>
+      </div>
+
+      <div class="quiz">
+        <p class="quiz-question">Apa yang terjadi pada teks di dalam komentar <code>//</code> saat program dikompilasi?</p>
+        <div class="quiz-options">
+          <button class="quiz-option" data-explain="Komentar tidak pernah dieksekusi sebagai kode — itu justru inti dari fungsinya sebagai komentar.">Teks itu akan dieksekusi sebagai kode biasa</button>
+          <button class="quiz-option" data-correct="true" data-explain="Tepat. Compiler mengabaikan seluruh isi komentar — komentar murni untuk pembaca manusia, tidak memengaruhi perilaku program sama sekali.">Compiler sepenuhnya mengabaikannya</button>
+          <button class="quiz-option" data-explain="Komentar tidak pernah muncul di output program yang dijalankan.">Teks itu akan dicetak ke terminal saat program dijalankan</button>
+        </div>
+        <p class="quiz-feedback" aria-live="polite"></p>
+      </div>
+
+      <div class="summary-box">
+        <p class="summary-title">Ringkasan</p>
+        <ul>
+          <li>Komentar satu baris diawali <code>//</code> dan berlaku sampai akhir baris.</li>
+          <li>Komentar multi-baris idiomatisnya tetap mengulang <code>//</code> di setiap baris (Rust juga mengenal komentar blok <code>/* */</code>, tapi jarang dipakai komunitas Rust).</li>
+          <li>Compiler sepenuhnya mengabaikan komentar — murni untuk pembaca manusia.</li>
+        </ul>
+      </div>
+    </article>
+
+    <div class="page-complete">
+      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+    </div>
+    <nav class="page-nav" id="page-nav"></nav>
+  </main>
+</div>
+<script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/js/chapters-data.js"></script>
+<script src="../../assets/js/rust-highlight.js"></script>
+<script src="../../assets/js/main.js"></script>
+</body>
+</html>

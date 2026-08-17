@@ -122,7 +122,7 @@
           firstHref +
           '"><span class="nav-chapter-num">' +
           ch.number +
-          "</span><span>" +
+          '</span><span class="nav-chapter-title">' +
           escapeHtml(ch.title) +
           "</span></a>";
 
@@ -141,9 +141,9 @@
               escapeAttr(p.title.toLowerCase()) +
               '"><span class="nav-check' +
               (isDone ? " is-done" : "") +
-              '"></span>' +
+              '"></span><span class="nav-page-title">' +
               escapeHtml(p.title) +
-              "</a></li>";
+              "</span></a></li>";
           });
           html += "</ul>";
         }
@@ -151,7 +151,7 @@
         html +=
           '<span class="nav-chapter-link"><span class="nav-chapter-num">' +
           ch.number +
-          "</span><span>" +
+          '</span><span class="nav-chapter-title">' +
           escapeHtml(ch.title) +
           '</span><span class="soon-badge badge text-bg-secondary">Segera Hadir</span></span>';
       }

@@ -109,7 +109,7 @@ identik.
 </head>
 <body>
 <a class="skip-link visually-hidden-focusable" href="#main-content">Langsung ke konten</a>
-<header class="site-header navbar navbar-expand-lg sticky-top px-3">
+<header class="site-header navbar navbar-expand-lg px-3">
   <button id="sidebar-toggle" class="btn icon-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Buka menu navigasi">☰</button>
   <a href="../../index.html" class="site-title navbar-brand">🦀 Belajar Rust</a>
   <div class="header-progress progress flex-grow-1 mx-2" role="progressbar" aria-label="Progres belajar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
@@ -179,6 +179,12 @@ Poin penting:
 - Jangan menulis markup sidebar atau prev/next secara manual — semua digenerate
   oleh `main.js` dari `chapters-data.js`. Ini alasan utama proyek mudah
   dimaintain: menambah bab baru = update satu file data, bukan N file HTML.
+- `.site-header` di-set `position: fixed` (bukan `sticky-top` Bootstrap) di
+  `style.css` supaya navbar selalu menempel di atas viewport tanpa syarat;
+  `body` diberi `padding-top: var(--header-h)` untuk mengkompensasi supaya
+  konten tidak tertutup. **Jangan tambahkan class `sticky-top`** ke
+  `<header>` — utility itu memakai `!important` dan akan mengalahkan
+  override `position: fixed` di CSS.
 - Sidebar `#sidebar` memakai komponen **Offcanvas responsif Bootstrap**
   (`offcanvas-lg offcanvas-start`): di bawah breakpoint `lg` (<992px) ia
   menjadi panel slide-in dengan backdrop & tombol close bawaan Bootstrap
@@ -310,6 +316,18 @@ penjelasan teksnya juga.
   berlebihan), tapi tidak kaku — pakai emoji sebagai aksen ikon (bukan icon
   font/SVG library eksternal), dan warna aksen konsisten untuk menandai
   progres/interaktivitas.
+- **Gotcha penting:** tidak semua komponen Bootstrap benar-benar
+  variable-driven di CSS terkompilasi. Class dasar seperti `a`, `.card`,
+  `.form-control`, `.alert` (base) memang memakai `var(--bs-*)` sehingga
+  otomatis ikut tema saat variable di-override. Tapi varian warna seperti
+  `.btn-primary`, `.btn-success`, dll. di-compile Bootstrap dengan nilai hex
+  **hardcoded** (bukan `var(--bs-primary)`) — override `--bs-primary` TIDAK
+  akan mengubah warnanya. Untuk varian begini, override local custom
+  property komponennya langsung (contoh: `.btn-primary{--bs-btn-bg:var(--accent);...}`,
+  lihat `.btn-primary` di `style.css`). Kalau menambah komponen Bootstrap
+  baru yang butuh warna aksen, cek dulu isi `bootstrap.min.css` (cari
+  `.nama-class{` di file itu) untuk tahu apakah propertinya `var(--bs-*)`
+  atau hex literal sebelum asumsi override variable saja cukup.
 
 ## 7. Peta Bab Lengkap (kontrak penamaan — jangan diubah)
 

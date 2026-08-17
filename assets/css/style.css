@@ -115,9 +115,16 @@
 
 /* ---------- Base ----------------------------------------------------- */
 html, body { height: 100%; }
-body { transition: background-color 0.15s ease, color 0.15s ease; }
+body { padding-top: var(--header-h); transition: background-color 0.15s ease, color 0.15s ease; }
 h1, h2, h3, h4 { scroll-margin-top: calc(var(--header-h) + 16px); }
 code, pre { font-family: var(--font-mono); }
+
+/* Bootstrap reboot underlines all <a> by default; restore the site's
+   original "underline only on hover" convention. Components that need a
+   different hover treatment (nav links, cards, buttons) already set their
+   own :hover rule below and are unaffected. */
+a { text-decoration: none; }
+a:hover { text-decoration: underline; }
 
 .skip-link {
   position: absolute;
@@ -131,8 +138,35 @@ code, pre { font-family: var(--font-mono); }
 }
 .skip-link:focus { left: 0; }
 
+/* Bootstrap bakes button/focus-ring colors in as literal hex at build time
+   (they don't read from --bs-primary at runtime) — override explicitly so
+   primary buttons and focus rings actually use the rust accent. */
+.btn-primary {
+  --bs-btn-color: var(--accent-contrast);
+  --bs-btn-bg: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-color: var(--accent-contrast);
+  --bs-btn-hover-bg: var(--accent-strong);
+  --bs-btn-hover-border-color: var(--accent-strong);
+  --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+  --bs-btn-active-color: var(--accent-contrast);
+  --bs-btn-active-bg: var(--accent-strong);
+  --bs-btn-active-border-color: var(--accent-strong);
+  --bs-btn-disabled-color: var(--accent-contrast);
+  --bs-btn-disabled-bg: var(--accent);
+  --bs-btn-disabled-border-color: var(--accent);
+}
+.form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
 /* ---------- Header (Bootstrap navbar) ------------------------------------ */
 .site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   height: var(--header-h);
   background-color: color-mix(in srgb, var(--bs-body-bg) 92%, transparent);
   backdrop-filter: blur(8px);
@@ -171,22 +205,25 @@ code, pre { font-family: var(--font-mono); }
 
 #sidebar.offcanvas-lg {
   --bs-offcanvas-width: min(var(--sidebar-w), 82vw);
+  top: var(--header-h);
   background-color: var(--bs-body-bg);
+  overflow-x: hidden;
 }
+/* Keep the mobile backdrop below the fixed header (so header stays usable
+   while the sidebar is open) but above the page content. */
+.offcanvas-backdrop { z-index: 1025; }
 @media (min-width: 992px) {
   #sidebar.offcanvas-lg {
     width: var(--sidebar-w);
     flex: 0 0 var(--sidebar-w);
     position: sticky;
-    top: var(--header-h);
     height: calc(100vh - var(--header-h));
     overflow-y: auto;
     border-right: 1px solid var(--bs-border-color);
     padding: 16px 12px 40px;
   }
-  #sidebar.offcanvas-lg .offcanvas-body { padding: 0; }
+  #sidebar.offcanvas-lg .offcanvas-body { padding: 0; overflow-x: hidden; }
 }
-.sidebar-search input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .content {
   flex: 1;
@@ -211,7 +248,8 @@ code, pre { font-family: var(--font-mono); }
   font-size: 0.92rem;
 }
 .nav-chapter-link:hover { background: var(--bs-secondary-bg); text-decoration: none; }
-.nav-chapter-num { color: var(--bs-tertiary-color); font-weight: 700; min-width: 1.4em; }
+.nav-chapter-num { flex: 0 0 auto; color: var(--bs-tertiary-color); font-weight: 700; min-width: 1.4em; }
+.nav-chapter-title { flex: 1 1 auto; min-width: 0; overflow-wrap: break-word; }
 .nav-chapter.is-active-chapter > .nav-chapter-link { color: var(--accent); }
 
 .nav-pages { list-style: none; margin: 2px 0 8px; padding: 0 0 0 26px; }
@@ -224,7 +262,9 @@ code, pre { font-family: var(--font-mono); }
   font-size: 0.87rem;
   color: var(--bs-secondary-color);
   border-left: 2px solid transparent;
+  min-width: 0;
 }
+.nav-page-title { flex: 1 1 auto; min-width: 0; overflow-wrap: break-word; }
 .nav-page-link:hover { background: var(--bs-secondary-bg); text-decoration: none; color: var(--bs-body-color); }
 .nav-page-link.is-active {
   color: var(--accent);
@@ -251,7 +291,7 @@ code, pre { font-family: var(--font-mono); }
 
 .nav-chapter-soon { opacity: 0.55; }
 .nav-chapter-soon .nav-chapter-link { cursor: default; font-weight: 600; color: var(--bs-secondary-color); }
-.soon-badge { white-space: nowrap; }
+.soon-badge { flex: 0 0 auto; white-space: nowrap; }
 
 /* ---------- Article typography ------------------------------------------ */
 .chapter-label {

@@ -7,11 +7,18 @@ bukan di kepala siapa pun.
 
 ## 1. Apa proyek ini
 
-Situs kursus statis (HTML + CSS + JS vanilla, tanpa build step, tanpa framework,
-tanpa dependency eksternal/CDN) yang mengadaptasi buku resmi
+Situs kursus statis (HTML + Bootstrap 5.3.8 + jQuery 4.0.0, tanpa build step,
+tanpa package manager/npm, tanpa CDN — Bootstrap & jQuery di-vendor lokal di
+`assets/vendor/`, lihat §10) yang mengadaptasi buku resmi
 **[The Rust Programming Language](https://doc.rust-lang.org/book/)** ("the Book")
 menjadi materi belajar berbahasa Indonesia yang **sangat ramah pemula** tanpa
 mengorbankan kedalaman teknis buku aslinya.
+
+> **Riwayat migrasi:** situs ini awalnya ditulis dengan CSS/JS vanilla murni
+> (tanpa framework apa pun), lalu dimigrasikan ke Bootstrap 5.3.8 + jQuery
+> 4.0.0 pada 2026-08-17. Prinsip "tanpa CDN, tanpa build step" tetap
+> dipertahankan — Bootstrap & jQuery jadi dependency, tapi di-vendor sebagai
+> file statis lokal, bukan diambil dari CDN.
 
 Prinsip inti (jangan dilanggar saat menambah materi baru):
 
@@ -62,9 +69,13 @@ konsisten walau dikerjakan berbulan-bulan kemudian:
 ├── CLAUDE.md                     ← dokumen ini
 ├── index.html                    ← landing page / daftar isi
 ├── assets/
-│   ├── css/style.css             ← SATU file CSS untuk seluruh situs (design tokens + komponen)
+│   ├── vendor/bootstrap/css/bootstrap.min.css   ← Bootstrap 5.3.8 (vendored, bukan CDN)
+│   ├── vendor/bootstrap/js/bootstrap.bundle.min.js ← Bootstrap JS + Popper (vendored)
+│   ├── vendor/jquery/jquery-4.0.0.min.js        ← jQuery 4.0.0 (vendored)
+│   ├── css/style.css             ← SATU file CSS custom, dimuat SETELAH bootstrap.min.css
+│   │                                (override variable tema Bootstrap + styling komponen custom)
 │   ├── js/chapters-data.js       ← SUMBER KEBENARAN TUNGGAL struktur bab (roadmap 21 bab)
-│   ├── js/main.js                ← render sidebar, dark mode, progress, quiz, prev/next, search
+│   ├── js/main.js                ← jQuery: render sidebar, dark mode, progress, quiz, prev/next, search
 │   └── js/rust-highlight.js      ← syntax highlighter Rust buatan sendiri (tanpa dependency)
 └── chapters/
     └── chNN-slug/
@@ -93,25 +104,35 @@ identik.
 <title>N.M Judul Subbab — Belajar Rust</title>
 <meta name="description" content="Deskripsi singkat 1 kalimat untuk SEO/preview.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/vendor/bootstrap/css/bootstrap.min.css">
 <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
-<a class="skip-link" href="#main-content">Langsung ke konten</a>
-<header class="site-header">
-  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
-  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
-  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
-  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+<a class="skip-link visually-hidden-focusable" href="#main-content">Langsung ke konten</a>
+<header class="site-header navbar navbar-expand-lg sticky-top px-3">
+  <button id="sidebar-toggle" class="btn icon-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title navbar-brand">🦀 Belajar Rust</a>
+  <div class="header-progress progress flex-grow-1 mx-2" role="progressbar" aria-label="Progres belajar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+    <div class="header-progress-bar progress-bar" id="progress-bar"></div>
+  </div>
+  <button id="theme-toggle" class="btn icon-btn" type="button" aria-label="Ganti tema terang/gelap">🌙</button>
 </header>
 <div class="layout">
-  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
-    <div class="sidebar-search">
-      <input id="search-input" type="search" placeholder="Cari materi...">
+  <nav id="sidebar" class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" aria-label="Navigasi bab">
+    <div class="offcanvas-header d-lg-none">
+      <span class="offcanvas-title fw-bold">🦀 Belajar Rust</span>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Tutup menu"></button>
     </div>
-    <div id="sidebar-nav"><!-- diisi otomatis oleh main.js dari chapters-data.js --></div>
+    <div class="offcanvas-body">
+      <div class="sidebar-search">
+        <input id="search-input" type="search" class="form-control" placeholder="Cari materi...">
+      </div>
+      <div id="sidebar-nav"><!-- diisi otomatis oleh main.js dari chapters-data.js --></div>
+    </div>
   </nav>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
   <main id="main-content" class="content" data-page-id="chNN-MM">
+    <nav class="site-breadcrumb"><a href="../../index.html">Beranda</a> / Bab N: Judul Bab</nav>
     <article>
       <p class="chapter-label">Bab N.M</p>
       <h1>Judul Subbab</h1>
@@ -120,12 +141,17 @@ identik.
 
     </article>
     <div class="page-complete">
-      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="mark-complete">
+        <label class="form-check-label" for="mark-complete">Tandai sudah dibaca</label>
+      </div>
     </div>
     <nav class="page-nav" id="page-nav"><!-- diisi otomatis oleh main.js --></nav>
   </main>
 </div>
 <script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/vendor/jquery/jquery-4.0.0.min.js"></script>
+<script src="../../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="../../assets/js/chapters-data.js"></script>
 <script src="../../assets/js/rust-highlight.js"></script>
 <script src="../../assets/js/main.js"></script>
@@ -139,6 +165,11 @@ asset tidak pakai prefix `../../` (langsung `assets/...`, `chapters/...`).
 
 Poin penting:
 
+- Urutan 5 `<script>` di akhir body **HARUS** persis seperti di atas: jQuery
+  dulu, lalu Bootstrap bundle (butuh jQuery? tidak — Bootstrap JS berdiri
+  sendiri, tapi urutan ini konsisten di semua halaman), baru
+  `chapters-data.js` → `rust-highlight.js` → `main.js` (yang butuh jQuery &
+  `window.bootstrap` sudah ada saat file-nya dieksekusi).
 - Script inline `COURSE_BASE` **HARUS** ada sebelum `chapters-data.js` di
   SETIAP halaman — `main.js` memakainya untuk membangun semua href sidebar dan
   prev/next secara dinamis (lihat §3 kenapa kedalaman folder harus konsisten).
@@ -148,6 +179,12 @@ Poin penting:
 - Jangan menulis markup sidebar atau prev/next secara manual — semua digenerate
   oleh `main.js` dari `chapters-data.js`. Ini alasan utama proyek mudah
   dimaintain: menambah bab baru = update satu file data, bukan N file HTML.
+- Sidebar `#sidebar` memakai komponen **Offcanvas responsif Bootstrap**
+  (`offcanvas-lg offcanvas-start`): di bawah breakpoint `lg` (<992px) ia
+  menjadi panel slide-in dengan backdrop & tombol close bawaan Bootstrap
+  (tidak perlu JS/CSS custom untuk overlay); di ≥992px ia otomatis menjadi
+  kolom statis sticky di sisi kiri. Jangan tambahkan lagi elemen
+  `.sidebar-overlay` manual — sudah digantikan backdrop Bootstrap.
 - Heading hierarchy dalam `<article>`: `<h1>` = judul subbab (satu-satunya per
   halaman), `<h2>` untuk seksi besar (biasanya mengikuti heading `##` di
   markdown asli), `<h3>` untuk sub-seksi.
@@ -157,6 +194,16 @@ Poin penting:
   (Bab 2) hanya punya satu `index.html` di folder babnya.
 
 ## 5. Komponen konten yang tersedia (pakai class ini, jangan bikin baru tanpa alasan)
+
+Kontrak class di bawah ini **TIDAK BERUBAH** oleh migrasi ke Bootstrap — tulis
+markup persis seperti contoh, jangan menambahkan class Bootstrap (`alert`,
+`card`, `btn`, dst.) secara manual. `main.js` (fungsi
+`applyBootstrapEnhancements`, dipanggil lewat jQuery saat halaman dimuat)
+otomatis menambahkan class Bootstrap yang sesuai ke elemen `.callout`
+(→ `alert`), `.quiz` (→ `card card-body shadow-sm`), `.quiz-option`
+(→ `btn text-start`), dan `.summary-box` (→ `card card-body`) saat runtime.
+Ini menjaga authoring tetap sederhana sekaligus membuat komponennya benar-benar
+memakai styling Bootstrap di baliknya.
 
 ### Callout box
 ```html
@@ -241,14 +288,24 @@ penjelasan teksnya juga.
 
 ## 6. Gaya visual (design tokens di `assets/css/style.css`)
 
-- Font: system font stack (tanpa font eksternal, supaya cepat & offline-safe).
-- Warna aksen terinspirasi warna Rust (oranye/rust), didefinisikan sebagai CSS
-  custom properties di `:root` dan `[data-theme="dark"]` — **selalu pakai
-  variable, jangan hardcode hex baru** di tempat lain.
-- Mode gelap/terang lewat atribut `data-theme` di `<html>`, disimpan di
-  `localStorage` key `theme`.
-- Layout: sidebar kiri (collapsible di mobile lewat tombol ☰) + konten utama
-  dengan `max-width` agar nyaman dibaca (bukan full-width).
+- Font: system font stack, dipasang lewat override variable
+  `--bs-body-font-family` (tanpa font eksternal, supaya cepat & offline-safe).
+- Situs ini adalah **Bootstrap yang di-reskin**, bukan Bootstrap default:
+  warna aksen rust/oranye diterapkan dengan meng-override CSS custom
+  property milik Bootstrap sendiri (`--bs-primary`, `--bs-body-bg`,
+  `--bs-body-color`, `--bs-border-color`, `--bs-secondary-bg`, dst.) di
+  `:root` (mode terang) dan `[data-bs-theme="dark"]` (mode gelap) — **selalu
+  override variable Bootstrap yang relevan, jangan hardcode hex baru** atau
+  bikin token warna custom kecuali benar-benar tidak ada padanan variable
+  Bootstrap-nya (contoh: `--accent`, `--ok`/`--danger`/`--info`/`--warn` untuk
+  callout & quiz, `.tok-*` untuk warna syntax highlighting). Efeknya: hampir
+  semua komponen Bootstrap (button, form, navbar, offcanvas, card, alert,
+  badge, progress) otomatis ikut bertema rust tanpa CSS komponen custom.
+- Mode gelap/terang lewat atribut **`data-bs-theme`** (milik Bootstrap 5.3) di
+  `<html>`, diatur oleh `main.js` dan disimpan di `localStorage` key `theme`.
+- Layout: sidebar kiri berupa komponen **Offcanvas responsif Bootstrap**
+  (`offcanvas-lg`, lihat §4) + konten utama dengan `max-width` agar nyaman
+  dibaca (bukan full-width).
 - Filosofi: sederhana & minimalis (banyak whitespace, tanpa gradient/shadow
   berlebihan), tapi tidak kaku — pakai emoji sebagai aksen ikon (bukan icon
   font/SVG library eksternal), dan warna aksen konsisten untuk menandai
@@ -315,7 +372,11 @@ Setiap bab di atas punya entri terkait di `assets/js/chapters-data.js` dengan
 - [ ] Setiap subbab punya minimal 1 quiz dan 1 ringkasan penutup.
 - [ ] Buka `index.html` di browser (`file://` langsung, tanpa server, HARUS
       tetap berfungsi penuh — tidak ada `fetch()` ke file lain di proyek ini),
-      cek dark mode toggle, cek sidebar, cek beberapa halaman baru.
+      cek dark mode toggle (atribut `data-bs-theme` di `<html>` berubah), cek
+      sidebar (offcanvas slide-in di mobile width, kolom statis di ≥992px),
+      cek beberapa halaman baru.
+- [ ] Urutan script di akhir `<body>` benar: jQuery → Bootstrap bundle →
+      `chapters-data.js` → `rust-highlight.js` → `main.js` (lihat §4).
 - [ ] Update §8 di dokumen ini.
 
 ## 10. Batasan teknis yang disengaja
@@ -327,6 +388,16 @@ Setiap bab di atas punya entri terkait di `assets/js/chapters-data.js` dengan
 - **Tidak ada fetch() ke file lokal lain.** Semua data lintas-halaman (daftar
   bab) hidup di `chapters-data.js` sebagai variabel global JS biasa, di-load
   lewat `<script src>`, bukan lewat `fetch()`.
-- **Tidak ada dependency eksternal/CDN** (font, ikon, syntax highlighter,
-  framework CSS). Semua ditulis sendiri di `assets/`. Ini memastikan situs
-  selalu bisa dibuka offline dan tidak akan rusak karena link CDN mati.
+- **Bootstrap 5.3.8 & jQuery 4.0.0, tapi tanpa CDN.** Proyek ini SENGAJA
+  memakai framework (beda dari versi awalnya yang vanilla murni), tapi
+  filosofi "selalu bisa dibuka offline, tidak rusak karena link CDN mati"
+  tetap dipertahankan — kedua library di-vendor sebagai file statis di
+  `assets/vendor/bootstrap/` dan `assets/vendor/jquery/` (lihat §3), dimuat
+  lewat `<script src>`/`<link href>` biasa, bukan dari `cdn.jsdelivr.net` atau
+  sejenisnya. **Jangan ganti jadi link CDN** dan jangan tambah dependency
+  eksternal lain (icon font, plugin jQuery, tema Bootstrap pihak ketiga) tanpa
+  vendor lokal serupa. Syntax highlighter Rust (`rust-highlight.js`) tetap
+  buatan sendiri tanpa dependency — tidak ada padanannya di Bootstrap/jQuery.
+- Class/komponen custom proyek (`callout`, `quiz`, `summary-box`, `code-wrap`,
+  dll. — lihat §5) tetap dipertahankan sebagai kontrak authoring; jQuery hanya
+  menambahkan class Bootstrap di atasnya saat runtime, bukan menggantikannya.

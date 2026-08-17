@@ -6,24 +6,32 @@
 <title>Belajar Rust — Kursus Bahasa Indonesia dari The Rust Programming Language</title>
 <meta name="description" content="Kursus pemrograman Rust berbahasa Indonesia yang ramah pemula, diadaptasi dari buku resmi The Rust Programming Language tanpa mengurangi kedalaman teknisnya.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<a class="skip-link" href="#main-content">Langsung ke konten</a>
-<header class="site-header">
-  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
-  <a href="index.html" class="site-title">🦀 Belajar Rust</a>
-  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
-  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+<a class="skip-link visually-hidden-focusable" href="#main-content">Langsung ke konten</a>
+<header class="site-header navbar navbar-expand-lg sticky-top px-3">
+  <button id="sidebar-toggle" class="btn icon-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Buka menu navigasi">☰</button>
+  <a href="index.html" class="site-title navbar-brand">🦀 Belajar Rust</a>
+  <div class="header-progress progress flex-grow-1 mx-2" role="progressbar" aria-label="Progres belajar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+    <div class="header-progress-bar progress-bar" id="progress-bar"></div>
+  </div>
+  <button id="theme-toggle" class="btn icon-btn" type="button" aria-label="Ganti tema terang/gelap">🌙</button>
 </header>
 <div class="layout">
-  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
-    <div class="sidebar-search">
-      <input id="search-input" type="search" placeholder="Cari materi...">
+  <nav id="sidebar" class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" aria-label="Navigasi bab">
+    <div class="offcanvas-header d-lg-none">
+      <span class="offcanvas-title fw-bold">🦀 Belajar Rust</span>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Tutup menu"></button>
     </div>
-    <div id="sidebar-nav"><!-- diisi otomatis oleh main.js dari chapters-data.js --></div>
+    <div class="offcanvas-body">
+      <div class="sidebar-search">
+        <input id="search-input" type="search" class="form-control" placeholder="Cari materi...">
+      </div>
+      <div id="sidebar-nav"><!-- diisi otomatis oleh main.js dari chapters-data.js --></div>
+    </div>
   </nav>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <main id="main-content" class="content">
     <section class="hero">
@@ -35,15 +43,17 @@
         bertahap — tanpa memangkas kedalaman teknis yang membuat buku aslinya
         begitu dihormati komunitas Rust.
       </p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="chapters/ch01-memulai/01-instalasi.html">Mulai Belajar →</a>
-        <a class="btn btn-ghost" href="#roadmap">Lihat Daftar Isi</a>
+      <div class="hero-actions d-flex gap-3 justify-content-center flex-wrap">
+        <a class="btn btn-primary btn-lg" href="chapters/ch01-memulai/01-instalasi.html">Mulai Belajar →</a>
+        <a class="btn btn-outline-secondary btn-lg" href="#roadmap">Lihat Daftar Isi</a>
       </div>
     </section>
 
     <div class="home-progress">
       <p id="home-progress-text">Mulai belajar untuk melihat progresmu di sini.</p>
-      <div class="header-progress"><div class="header-progress-bar" id="home-progress-bar"></div></div>
+      <div class="header-progress progress" role="progressbar" aria-label="Progres belajar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        <div class="header-progress-bar progress-bar" id="home-progress-bar"></div>
+      </div>
     </div>
 
     <h2 class="section-title" id="roadmap">Daftar Isi</h2>
@@ -52,7 +62,7 @@
       atau melanjutkan langsung dari versi bahasa Inggrisnya kapan pun perlu.
       Bab yang belum tersedia akan menyusul secara bertahap.
     </p>
-    <div class="chapter-grid" id="chapter-grid"><!-- diisi otomatis oleh main.js --></div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3 mb-5" id="chapter-grid"><!-- diisi otomatis oleh main.js --></div>
 
     <div class="callout callout-note">
       <p class="callout-title">ℹ️ Tentang kursus ini</p>
@@ -75,6 +85,8 @@
 </footer>
 
 <script>window.COURSE_BASE = { root: ".", chapters: "chapters" };</script>
+<script src="assets/vendor/jquery/jquery-4.0.0.min.js"></script>
+<script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/chapters-data.js"></script>
 <script src="assets/js/rust-highlight.js"></script>
 <script src="assets/js/main.js"></script>

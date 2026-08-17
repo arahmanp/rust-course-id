@@ -1,12 +1,15 @@
 /*
  * main.js — logika situs: sidebar dari chapters-data.js, dark mode, progress
- * (localStorage), quiz, syntax highlight & tombol salin kode, prev/next, search.
- * Tidak ada fetch() dan tidak ada ES module — lihat CLAUDE.md §10.
+ * (localStorage), quiz, syntax highlight & tombol salin kode, prev/next,
+ * search. Ditulis dengan jQuery, dan memakai komponen JS Bootstrap
+ * (Offcanvas) untuk sidebar mobile. Tidak ada fetch() dan tidak ada ES
+ * module — lihat CLAUDE.md §10.
  */
-(function () {
+(function ($) {
   "use strict";
 
   var PROGRESS_KEY = "rustCourseProgress";
+  var THEME_KEY = "theme";
 
   function escapeHtml(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -18,8 +21,8 @@
     return window.COURSE_BASE || { root: ".", chapters: "chapters" };
   }
   function getCurrentPageId() {
-    var main = document.querySelector("main[data-page-id]");
-    return main ? main.getAttribute("data-page-id") : null;
+    var main = $("main[data-page-id]").first();
+    return main.length ? main.attr("data-page-id") : null;
   }
   function getCompletedSet() {
     try {
@@ -52,56 +55,49 @@
     return flat;
   }
 
-  /* ---------- Tema terang/gelap ---------- */
+  /* ---------- Tema terang/gelap (data-bs-theme milik Bootstrap) ---------- */
   function initTheme() {
-    var root = document.documentElement;
-    var saved = localStorage.getItem("theme");
-    if (saved) root.setAttribute("data-theme", saved);
-    var btn = document.getElementById("theme-toggle");
-    function isDark() {
-      var attr = root.getAttribute("data-theme");
-      if (attr) return attr === "dark";
+    var $root = $("html");
+    var saved = localStorage.getItem(THEME_KEY);
+    var $btn = $("#theme-toggle");
+
+    function systemPrefersDark() {
       return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
-    function updateIcon() {
-      if (btn) btn.textContent = isDark() ? "☀️" : "🌙";
+    function apply(theme) {
+      $root.attr("data-bs-theme", theme);
+      if ($btn.length) $btn.text(theme === "dark" ? "☀️" : "🌙");
     }
-    updateIcon();
-    if (btn) {
-      btn.addEventListener("click", function () {
-        var next = isDark() ? "light" : "dark";
-        root.setAttribute("data-theme", next);
-        localStorage.setItem("theme", next);
-        updateIcon();
+
+    apply(saved || (systemPrefersDark() ? "dark" : "light"));
+
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function (e) {
+        if (!localStorage.getItem(THEME_KEY)) apply(e.matches ? "dark" : "light");
       });
     }
+
+    $btn.on("click", function () {
+      var next = $root.attr("data-bs-theme") === "dark" ? "light" : "dark";
+      localStorage.setItem(THEME_KEY, next);
+      apply(next);
+    });
   }
 
-  /* ---------- Sidebar mobile toggle ---------- */
-  function initSidebarToggle() {
-    var toggle = document.getElementById("sidebar-toggle");
-    var overlay = document.getElementById("sidebar-overlay");
-    function close() {
-      document.body.classList.remove("sidebar-open");
-    }
-    if (toggle) {
-      toggle.addEventListener("click", function () {
-        document.body.classList.toggle("sidebar-open");
-      });
-    }
-    if (overlay) overlay.addEventListener("click", close);
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") close();
-    });
-    document.addEventListener("click", function (e) {
-      if (e.target.closest && e.target.closest("#sidebar-nav a")) close();
+  /* ---------- Sidebar mobile: tutup offcanvas saat sebuah link diklik ---------- */
+  function initSidebarClose() {
+    var sidebarEl = document.getElementById("sidebar");
+    if (!sidebarEl || !window.bootstrap) return;
+    $(document).on("click", "#sidebar-nav a, .sidebar-search a", function () {
+      var instance = bootstrap.Offcanvas.getInstance(sidebarEl);
+      if (instance) instance.hide();
     });
   }
 
   /* ---------- Sidebar navigasi ---------- */
   function renderSidebar() {
-    var nav = document.getElementById("sidebar-nav");
-    if (!nav || typeof RUST_COURSE_CHAPTERS === "undefined") return;
+    var $nav = $("#sidebar-nav");
+    if (!$nav.length || typeof RUST_COURSE_CHAPTERS === "undefined") return;
     var currentPageId = getCurrentPageId();
     var currentChapterId = currentPageId ? currentPageId.split("-")[0] : null;
     var completed = getCompletedSet();
@@ -157,18 +153,18 @@
           ch.number +
           "</span><span>" +
           escapeHtml(ch.title) +
-          '</span><span class="soon-badge">Segera Hadir</span></span>';
+          '</span><span class="soon-badge badge text-bg-secondary">Segera Hadir</span></span>';
       }
       html += "</div>";
     });
 
-    nav.innerHTML = html;
+    $nav.html(html);
   }
 
   /* ---------- Prev / next ---------- */
   function renderPageNav() {
-    var container = document.getElementById("page-nav");
-    if (!container) return;
+    var $container = $("#page-nav");
+    if (!$container.length) return;
     var currentPageId = getCurrentPageId();
     if (!currentPageId) return;
     var flat = getAvailablePagesFlat();
@@ -205,7 +201,7 @@
         escapeHtml(next.label + " " + next.title) +
         "</span></a>";
     }
-    container.innerHTML = html;
+    $container.html(html);
   }
 
   /* ---------- Tandai selesai + progress ---------- */
@@ -218,30 +214,27 @@
     }).length;
     var pct = total ? Math.round((done / total) * 100) : 0;
 
-    var bar = document.getElementById("progress-bar");
-    if (bar) bar.style.width = pct + "%";
+    $("#progress-bar").css("width", pct + "%").attr("aria-valuenow", pct);
+    $("#home-progress-bar").css("width", pct + "%").attr("aria-valuenow", pct);
 
-    var homeBar = document.getElementById("home-progress-bar");
-    if (homeBar) homeBar.style.width = pct + "%";
-
-    var homeText = document.getElementById("home-progress-text");
-    if (homeText) {
-      homeText.textContent = total
-        ? done + " dari " + total + " halaman selesai (" + pct + "%)"
-        : "Mulai belajar untuk melihat progresmu di sini.";
+    var $homeText = $("#home-progress-text");
+    if ($homeText.length) {
+      $homeText.text(
+        total ? done + " dari " + total + " halaman selesai (" + pct + "%)" : "Mulai belajar untuk melihat progresmu di sini."
+      );
     }
   }
 
   function initMarkComplete() {
-    var checkbox = document.getElementById("mark-complete");
-    if (!checkbox) return;
+    var $checkbox = $("#mark-complete");
+    if (!$checkbox.length) return;
     var pageId = getCurrentPageId();
     if (!pageId) return;
     var completed = getCompletedSet();
-    checkbox.checked = completed.has(pageId);
-    checkbox.addEventListener("change", function () {
+    $checkbox.prop("checked", completed.has(pageId));
+    $checkbox.on("change", function () {
       var set = getCompletedSet();
-      if (checkbox.checked) set.add(pageId);
+      if ($checkbox.is(":checked")) set.add(pageId);
       else set.delete(pageId);
       saveCompletedSet(set);
       renderSidebar();
@@ -249,23 +242,24 @@
     });
   }
 
-  /* ---------- Grid bab di landing page ---------- */
+  /* ---------- Grid bab di landing page (kartu Bootstrap) ---------- */
   function renderChapterGrid() {
-    var grid = document.getElementById("chapter-grid");
-    if (!grid || typeof RUST_COURSE_CHAPTERS === "undefined") return;
+    var $grid = $("#chapter-grid");
+    if (!$grid.length || typeof RUST_COURSE_CHAPTERS === "undefined") return;
     var base = getBase();
     var completed = getCompletedSet();
     var html = "";
 
     RUST_COURSE_CHAPTERS.forEach(function (ch) {
       var isAvailable = ch.status === "available" && ch.pages.length > 0;
+      html += '<div class="col">';
       if (isAvailable) {
         var href = base.chapters + "/" + ch.slug + "/" + ch.pages[0].file;
         var doneCount = ch.pages.filter(function (p) {
           return completed.has(p.id);
         }).length;
         html +=
-          '<a class="chapter-card" href="' +
+          '<a class="chapter-card card card-body shadow-sm text-decoration-none" href="' +
           href +
           '"><span class="chapter-card-num">Bab ' +
           ch.number +
@@ -280,56 +274,51 @@
           "</a>";
       } else {
         html +=
-          '<div class="chapter-card is-soon"><span class="chapter-card-num">Bab ' +
+          '<div class="chapter-card is-soon card card-body"><span class="chapter-card-num">Bab ' +
           ch.number +
           '</span><span class="chapter-card-title">' +
           escapeHtml(ch.title) +
           '</span><span class="chapter-card-desc">' +
           escapeHtml(ch.desc || "") +
-          '</span><span class="soon-badge">Segera Hadir</span></div>';
+          '</span><span class="soon-badge badge text-bg-secondary align-self-start">Segera Hadir</span></div>';
       }
+      html += "</div>";
     });
 
-    grid.innerHTML = html;
+    $grid.html(html);
   }
 
   /* ---------- Blok kode: highlight + label + tombol salin ---------- */
   function enhanceCodeBlocks() {
-    document.querySelectorAll("article pre").forEach(function (pre) {
-      var codeEl = pre.querySelector("code");
-      if (!codeEl) return;
+    $("article pre").each(function () {
+      var $pre = $(this);
+      var $code = $pre.find("code").first();
+      if (!$code.length) return;
 
-      if (codeEl.className.indexOf("language-rust") !== -1 && window.RustHighlight) {
-        codeEl.innerHTML = window.RustHighlight.highlightRust(codeEl.textContent);
+      if ($code.hasClass("language-rust") && window.RustHighlight) {
+        $code.html(window.RustHighlight.highlightRust($code.text()));
       }
 
-      var members = [pre];
-      var sib = pre.previousElementSibling;
-      while (sib && (sib.classList.contains("filename-label") || sib.classList.contains("code-badge"))) {
-        members.unshift(sib);
-        sib = sib.previousElementSibling;
+      var $members = $pre;
+      var $sib = $pre.prev();
+      while ($sib.length && ($sib.hasClass("filename-label") || $sib.hasClass("code-badge"))) {
+        $members = $sib.add($members);
+        $sib = $sib.prev();
       }
 
-      var wrap = document.createElement("div");
-      wrap.className = "code-wrap";
-      members[0].parentNode.insertBefore(wrap, members[0]);
-      members.forEach(function (el) {
-        wrap.appendChild(el);
-      });
+      var $wrap = $('<div class="code-wrap"></div>');
+      $members.first().before($wrap);
+      $wrap.append($members);
 
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "copy-btn";
-      btn.textContent = "Salin";
-      btn.setAttribute("aria-label", "Salin kode");
-      btn.addEventListener("click", function () {
-        var text = codeEl.textContent;
+      var $btn = $(
+        '<button type="button" class="copy-btn btn btn-sm btn-outline-secondary" aria-label="Salin kode">Salin</button>'
+      );
+      $btn.on("click", function () {
+        var text = $code.text();
         var done = function () {
-          btn.textContent = "Tersalin!";
-          btn.classList.add("copied");
+          $btn.text("Tersalin!").addClass("copied");
           setTimeout(function () {
-            btn.textContent = "Salin";
-            btn.classList.remove("copied");
+            $btn.text("Salin").removeClass("copied");
           }, 1500);
         };
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -338,73 +327,77 @@
           done();
         }
       });
-      wrap.appendChild(btn);
+      $wrap.append($btn);
     });
+  }
+
+  /* ---------- Perkaya komponen konten dengan class Bootstrap ---------- */
+  function applyBootstrapEnhancements() {
+    $(".callout").addClass("alert");
+    $(".quiz").addClass("card card-body shadow-sm");
+    $(".quiz-option").addClass("btn text-start");
+    $(".summary-box").addClass("card card-body");
   }
 
   /* ---------- Quiz ---------- */
   function setupQuizzes() {
-    document.querySelectorAll(".quiz").forEach(function (quiz) {
-      var options = quiz.querySelectorAll(".quiz-option");
-      var feedback = quiz.querySelector(".quiz-feedback");
-      options.forEach(function (opt) {
-        opt.addEventListener("click", function () {
-          options.forEach(function (o) {
-            o.disabled = true;
-          });
-          var correct = opt.getAttribute("data-correct") === "true";
-          opt.classList.add(correct ? "is-correct" : "is-incorrect");
-          if (!correct) {
-            var correctOpt = quiz.querySelector('.quiz-option[data-correct="true"]');
-            if (correctOpt) correctOpt.classList.add("is-correct");
-          }
-          if (feedback) {
-            feedback.textContent = (correct ? "✅ Benar! " : "❌ Belum tepat. ") + (opt.getAttribute("data-explain") || "");
-          }
-        });
+    $(".quiz").each(function () {
+      var $quiz = $(this);
+      var $options = $quiz.find(".quiz-option");
+      var $feedback = $quiz.find(".quiz-feedback");
+      $options.on("click", function () {
+        var $opt = $(this);
+        $options.prop("disabled", true);
+        var correct = $opt.attr("data-correct") === "true";
+        $opt.addClass(correct ? "is-correct" : "is-incorrect");
+        if (!correct) {
+          $quiz.find('.quiz-option[data-correct="true"]').addClass("is-correct");
+        }
+        if ($feedback.length) {
+          $feedback.text((correct ? "✅ Benar! " : "❌ Belum tepat. ") + ($opt.attr("data-explain") || ""));
+        }
       });
     });
   }
 
   /* ---------- Pencarian sidebar ---------- */
   function initSearch() {
-    var input = document.getElementById("search-input");
-    if (!input) return;
-    input.addEventListener("input", function () {
-      var q = input.value.trim().toLowerCase();
-      var chapters = document.querySelectorAll("#sidebar-nav .nav-chapter");
-      chapters.forEach(function (chEl) {
+    var $input = $("#search-input");
+    if (!$input.length) return;
+    $input.on("input", function () {
+      var q = $input.val().trim().toLowerCase();
+      $("#sidebar-nav .nav-chapter").each(function () {
+        var $chEl = $(this);
         if (!q) {
-          chEl.style.display = "";
-          chEl.querySelectorAll(".nav-pages li").forEach(function (li) {
-            li.style.display = "";
-          });
+          $chEl.show();
+          $chEl.find(".nav-pages li").show();
           return;
         }
-        var chapterMatches = (chEl.getAttribute("data-search-title") || "").indexOf(q) !== -1;
-        var pageItems = chEl.querySelectorAll(".nav-pages li");
+        var chapterMatches = ($chEl.attr("data-search-title") || "").indexOf(q) !== -1;
         var anyPageMatch = false;
-        pageItems.forEach(function (li) {
-          var link = li.querySelector(".nav-page-link");
-          var match = !!(link && (link.getAttribute("data-search-title") || "").indexOf(q) !== -1);
-          li.style.display = match ? "" : "none";
+        $chEl.find(".nav-pages li").each(function () {
+          var $li = $(this);
+          var $link = $li.find(".nav-page-link");
+          var match = ($link.attr("data-search-title") || "").indexOf(q) !== -1;
+          $li.toggle(match);
           if (match) anyPageMatch = true;
         });
-        chEl.style.display = chapterMatches || anyPageMatch ? "" : "none";
+        $chEl.toggle(chapterMatches || anyPageMatch);
       });
     });
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  $(function () {
     initTheme();
-    initSidebarToggle();
+    initSidebarClose();
     renderSidebar();
     renderPageNav();
     initMarkComplete();
     updateProgressUI();
     renderChapterGrid();
+    applyBootstrapEnhancements();
     enhanceCodeBlocks();
     setupQuizzes();
     initSearch();
   });
-})();
+})(jQuery);

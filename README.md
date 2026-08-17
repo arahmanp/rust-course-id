@@ -13,11 +13,14 @@ dan elemen interaktif yang lebih mudah dicerna pemula.
 - **Interaktif**: quiz pemahaman di setiap subbab, progress tracking otomatis
   (tersimpan di browser lewat `localStorage`, tanpa perlu akun), tombol salin
   kode, dan pencarian materi di sidebar.
-- **Dark mode / light mode.**
-- **100% statis, tanpa dependency eksternal.** Tidak ada build step, tidak ada
-  framework, tidak ada CDN (font/ikon/syntax highlighter semuanya ditulis
-  sendiri) — jadi selalu bisa dibuka offline dan tidak akan rusak karena link
-  CDN mati.
+- **Dark mode / light mode**, lewat dark mode bawaan Bootstrap 5.3
+  (`data-bs-theme`).
+- **Dibangun dengan Bootstrap 5.3.8 + jQuery 4.0.0**, di-reskin dengan warna
+  aksen rust/oranye lewat override variable CSS Bootstrap.
+- **100% statis, tanpa CDN.** Tidak ada build step, tidak ada package manager
+  — Bootstrap & jQuery di-vendor sebagai file lokal di `assets/vendor/`
+  (bukan diambil dari CDN), syntax highlighter Rust tetap ditulis sendiri —
+  jadi selalu bisa dibuka offline dan tidak akan rusak karena link CDN mati.
 
 ## Cara membuka
 
@@ -44,9 +47,11 @@ waktu.
 ├── CLAUDE.md              ← manual kerja & konvensi proyek (baca ini dulu sebelum melanjutkan)
 ├── index.html             ← halaman utama / daftar isi
 ├── assets/
-│   ├── css/style.css      ← seluruh styling situs
+│   ├── vendor/bootstrap/  ← Bootstrap 5.3.8 (CSS + JS bundle), di-vendor lokal
+│   ├── vendor/jquery/     ← jQuery 4.0.0, di-vendor lokal
+│   ├── css/style.css      ← styling custom di atas Bootstrap (override variable tema + komponen)
 │   ├── js/chapters-data.js← sumber data struktur seluruh bab
-│   ├── js/main.js         ← sidebar, dark mode, progress, quiz, navigasi
+│   ├── js/main.js         ← jQuery: sidebar, dark mode, progress, quiz, navigasi
 │   ├── js/rust-highlight.js ← syntax highlighter Rust buatan sendiri
 │   └── img/                ← diagram (SVG) dari buku asli
 └── chapters/

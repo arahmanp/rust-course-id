@@ -6,27 +6,35 @@
 <title>5.2 Contoh Program Menggunakan Struct — Belajar Rust</title>
 <meta name="description" content="Merefactor program penghitung luas persegi panjang langkah demi langkah dari variabel lepas menjadi tuple lalu struct, plus trait Debug dan macro dbg!.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="stylesheet" href="../../assets/vendor/bootstrap/css/bootstrap.min.css">
 <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
-<a class="skip-link" href="#main-content">Langsung ke konten</a>
-<header class="site-header">
-  <button id="sidebar-toggle" class="icon-btn" aria-label="Buka menu navigasi">☰</button>
-  <a href="../../index.html" class="site-title">🦀 Belajar Rust</a>
-  <div class="header-progress" aria-hidden="true"><div class="header-progress-bar" id="progress-bar"></div></div>
-  <button id="theme-toggle" class="icon-btn" aria-label="Ganti tema terang/gelap">🌙</button>
+<a class="skip-link visually-hidden-focusable" href="#main-content">Langsung ke konten</a>
+<header class="site-header navbar navbar-expand-lg sticky-top px-3">
+  <button id="sidebar-toggle" class="btn icon-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Buka menu navigasi">☰</button>
+  <a href="../../index.html" class="site-title navbar-brand">🦀 Belajar Rust</a>
+  <div class="header-progress progress flex-grow-1 mx-2" role="progressbar" aria-label="Progres belajar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+    <div class="header-progress-bar progress-bar" id="progress-bar"></div>
+  </div>
+  <button id="theme-toggle" class="btn icon-btn" type="button" aria-label="Ganti tema terang/gelap">🌙</button>
 </header>
 <div class="layout">
-  <nav id="sidebar" class="sidebar" aria-label="Navigasi bab">
-    <div class="sidebar-search">
-      <input id="search-input" type="search" placeholder="Cari materi...">
+  <nav id="sidebar" class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" aria-label="Navigasi bab">
+    <div class="offcanvas-header d-lg-none">
+      <span class="offcanvas-title fw-bold">🦀 Belajar Rust</span>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Tutup menu"></button>
     </div>
-    <div id="sidebar-nav"></div>
+    <div class="offcanvas-body">
+      <div class="sidebar-search">
+        <input id="search-input" type="search" class="form-control" placeholder="Cari materi...">
+      </div>
+      <div id="sidebar-nav"></div>
+    </div>
   </nav>
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <main id="main-content" class="content" data-page-id="ch05-02">
-    <nav class="breadcrumb"><a href="../../index.html">Beranda</a> / Bab 5: Struct</nav>
+    <nav class="site-breadcrumb"><a href="../../index.html">Beranda</a> / Bab 5: Struct</nav>
     <article>
       <p class="chapter-label">Bab 5.2</p>
       <h1>Contoh Program Menggunakan Struct</h1>
@@ -391,12 +399,17 @@ fn main() {
     </article>
 
     <div class="page-complete">
-      <label><input type="checkbox" id="mark-complete"> Tandai sudah dibaca</label>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="mark-complete">
+        <label class="form-check-label" for="mark-complete">Tandai sudah dibaca</label>
+      </div>
     </div>
     <nav class="page-nav" id="page-nav"></nav>
   </main>
 </div>
 <script>window.COURSE_BASE = { root: "../..", chapters: ".." };</script>
+<script src="../../assets/vendor/jquery/jquery-4.0.0.min.js"></script>
+<script src="../../assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="../../assets/js/chapters-data.js"></script>
 <script src="../../assets/js/rust-highlight.js"></script>
 <script src="../../assets/js/main.js"></script>
